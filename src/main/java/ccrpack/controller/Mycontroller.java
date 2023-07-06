@@ -88,7 +88,7 @@ public class Mycontroller {
 		
 		session.save(rf);
 		//hri.save(hra);
-
+session.close();
 		return null;
 
 	}
@@ -117,39 +117,87 @@ public class Mycontroller {
 	}
 	
 	
-	@PostMapping(value = "/addrecruiter")
+	@PostMapping(value = "/addAdminrecruiter")
 	public ResponseEntity<?> Addrecruiter(@RequestParam Integer hrid ,@RequestParam String hr_name, @RequestParam boolean approver,
 			@RequestParam boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
-		hra.setHr_name(hr_name);
-		hra.setAdded_by(hrid);
-		session.save(hra);
-		if(approver==true&&add_team==true)
-		{
-			int a=hra.getHr_admin_id();
-			System.out.println(a);
-			hra.setApprover(a);
-		
-			hra.setHr_role("Admin");
-		}
-		else if(approver==false&&add_team==true)
-		{
-			hra.setApprover(hrid);
-			hra.setHr_role("TeamLead");
-		}
-		else {
-			hra.setApprover(hrid);
-			hra.setHr_role("Rec");
-		}
-		
 
-		hri.save(hra);
+	
+			hra.setHr_name(hr_name);
+			hra.setAdded_by(hrid);
+			session.save(hra);
+			if(approver==true&&add_team==true)
+			{
+				int a=hra.getHr_admin_id();
+				System.out.println(a);
+				hra.setApprover(a);
+			
+				hra.setHr_role("Admin");
+			}
+			else if(approver==false&&add_team==true)
+			{
+				hra.setApprover(hrid);
+				hra.setHr_role("TeamLead");
+			}
+			else {
+				hra.setApprover(hrid);
+				hra.setHr_role("Rec");
+			}
+			
+
+			hri.save(hra);
+		
+		
+		
 		session.close();
 		return null;
 
 	}
 	
+	@PostMapping(value = "/addTLrecruiter")
+	public ResponseEntity<?> AddTLrecruiter(@RequestParam Integer hrid ,@RequestParam String hr_name, @RequestParam boolean approver,
+			@RequestParam boolean add_team) {
+
+		Session session = entityManager.unwrap(Session.class);
+	
+			
+			hra.setHr_name(hr_name);
+			hra.setAdded_by(hrid);
+			session.save(hra);
+	
+			
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+
+			CriteriaQuery<HrAdmin> cr = cb.createQuery(HrAdmin.class);
+			Root<HrAdmin> root = cr.from(HrAdmin.class);
+			cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
+			Query query = session.createQuery(cr);
+			HrAdmin z= (HrAdmin) query.getSingleResult();
+			int b= z.getApprover();
+			System.out.println(b);
+			
+			
+			int a= 5;
+	
+			 if(approver==false&&add_team==true)
+			{
+				hra.setApprover(b);
+				hra.setHr_role("TeamLead");
+			}
+			else {
+				hra.setApprover(b);
+				hra.setHr_role("Rec");
+			}
+			
+
+			hri.save(hra);
+		
+
+		session.close();
+		return null;
+
+	}
 	
 	
 	@PostMapping(value = "/changeapprover")
