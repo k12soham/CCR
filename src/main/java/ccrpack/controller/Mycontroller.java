@@ -117,6 +117,12 @@ public class Mycontroller {
 				return (ResponseEntity<?>) ResponseEntity.badRequest().body(" Current Password doesn't match...");
 		    }
 		}
+//	@PostMapping("/forgot-password")
+//	public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+//		cand = candinter.find
+//		return null;
+//	}
+//	
 
 	@PostMapping(value = "/addcomapny")
 	public ResponseEntity<?> companyreg(@RequestParam String cname, @RequestParam Long tan,
