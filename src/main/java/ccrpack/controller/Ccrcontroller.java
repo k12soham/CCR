@@ -103,28 +103,11 @@ public class Ccrcontroller {
 	}
 
 	@PutMapping(value = "/candchangepass")
-	public ResponseEntity<?> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
+	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
 			@RequestParam String newpass) {
-		Session session = entityManager.unwrap(Session.class);
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
-				cb.equal(root.get("candidate_password"), currentpass));
-		Query query = session.createQuery(cr);
-		Candidate results = null;
-		try {
-			results = (Candidate) query.getSingleResult();
-			cand = candinter.getById(candidate_id);
-			cand.setCandidate_password(newpass);
-			candinter.save(cand);
-			session.close();
-			return new ResponseEntity<>(cand, HttpStatus.OK);
-		} catch (NoResultException e) {
-			session.close();
-			return (ResponseEntity<?>) ResponseEntity.badRequest().body(" Current Password doesn't match...");
+	
+		return ccrservice.changePassword(candidate_id, currentpass,newpass);
 		}
-	}
 
 	///////////// SOHAM////////////////////
 

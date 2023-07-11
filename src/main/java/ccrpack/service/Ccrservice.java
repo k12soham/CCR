@@ -17,6 +17,7 @@ import ccrpack.repo.CompanyInter;
 import ccrpack.repo.HrInter;
 import ccrpack.repo.RatingInter;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -194,6 +195,31 @@ public class Ccrservice {
 
 		}
 
+	}
+
+	public ResponseEntity<String> changePassword(int candidate_id, String currentpass,String newpass) {
+		
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
+		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
+				cb.equal(root.get("candidate_password"), currentpass));
+		Query query = session.createQuery(cr);
+		Candidate results = null;
+		try {
+			results = (Candidate) query.getSingleResult();
+			cand = candinter.getById(candidate_id);
+			cand.setCandidate_password(newpass);
+			candinter.save(cand);
+			session.close();
+			
+			 return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+		} catch (NoResultException e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+		}
+	
 	}
 
 }
