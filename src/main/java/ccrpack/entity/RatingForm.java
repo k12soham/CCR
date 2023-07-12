@@ -32,7 +32,7 @@ public class RatingForm {
 
 	@ManyToOne
 	@JoinColumn(name = "hr_admin_id")
-	private HrAdmin hrAdmin;
+	private Hr hr;
 
 	private Integer approver_id;
 
@@ -47,7 +47,7 @@ public class RatingForm {
 
 	public RatingForm(Integer rating_id, boolean q1, boolean q2, boolean q3, boolean q4, boolean q5, boolean q6,
 			boolean q7, boolean q8, boolean q9, boolean q10, Integer rating_total, boolean approve, boolean new_request,
-			Candidate candidate, HrAdmin hrAdmin, Integer approver_id, Company company) {
+			Candidate candidate, Hr hr, Integer approver_id, Company company) {
 		super();
 		this.rating_id = rating_id;
 		this.q1 = q1;
@@ -64,7 +64,7 @@ public class RatingForm {
 		this.approve = approve;
 		this.new_request = new_request;
 		this.candidate = candidate;
-		this.hrAdmin = hrAdmin;
+		this.hr = hr;
 		this.approver_id = approver_id;
 		this.company = company;
 	}
@@ -173,12 +173,12 @@ public class RatingForm {
 		this.candidate = candidate;
 	}
 
-	public HrAdmin getHrAdmin() {
-		return hrAdmin;
+	public Hr getHr() {
+		return hr;
 	}
 
-	public void setHrAdmin(HrAdmin hrAdmin) {
-		this.hrAdmin = hrAdmin;
+	public void setHr(Hr hr) {
+		this.hr = hr;
 	}
 
 	public Company getCompany() {

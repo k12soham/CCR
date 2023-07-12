@@ -11,17 +11,18 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ccrpack.entity.Candidate;
 import ccrpack.entity.Company;
-import ccrpack.entity.HrAdmin;
+import ccrpack.entity.Hr;
 import ccrpack.entity.RatingForm;
-import ccrpack.repo.CandInter;
-import ccrpack.repo.CompanyInter;
-import ccrpack.repo.HrInter;
-import ccrpack.repo.RatingInter;
+import ccrpack.repo.CandidateRepo;
+import ccrpack.repo.CompanyRepo;
+import ccrpack.repo.HrRepo;
+import ccrpack.repo.RatingRepo;
 import ccrpack.service.Ccrservice;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -36,21 +37,21 @@ import jakarta.persistence.criteria.Root;
 @RestController
 public class Ccrcontroller {
 	@Autowired
-	CompanyInter comp;
+	CompanyRepo comp;
 
 	@Autowired
-	HrInter hri;
+	HrRepo hri;
 
 	@Autowired
-	RatingInter ri;
+	RatingRepo ri;
 
 	@Autowired
-	CandInter candinter;
+	CandidateRepo candinter;
 
 	@Autowired
 	Ccrservice ccrservice;
 
-	HrAdmin hra = new HrAdmin();
+	Hr hra = new Hr();
 	Company cm = new Company();
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
@@ -78,14 +79,18 @@ public class Ccrcontroller {
 			return ccrservice.changePassword(candidate_id, currentpass,newpass);
 	}
 
-	///////////// SOHAM////////////////////
 
+//	@PostMapping(value = "/addcomapny")
+//	public ResponseEntity<String> companyreg(@RequestParam String cname, @RequestParam Long tan,
+//			@RequestParam String hr_name, @RequestParam Long phone, @RequestParam String role) {
+//
+//		return ccrservice.companyreg(cname, tan, hr_name, phone, role);
+//
+//	}
 	@PostMapping(value = "/addcomapny")
-	public ResponseEntity<String> companyreg(@RequestParam String cname, @RequestParam Long tan,
-			@RequestParam String hr_name, @RequestParam Long phone, @RequestParam String role) {
+	public ResponseEntity<String> companyReg(@RequestBody Company company) {
 
-		return ccrservice.companyreg(cname, tan, hr_name, phone, role);
-	
+		return ccrservice.companyReg(company);
 
 	}
 
@@ -108,9 +113,7 @@ public class Ccrcontroller {
 	public ResponseEntity<String> AddAdminrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
-
 		return ccrservice.AddAdminrecruiter(hrid, hr_name, approver, add_team);
-
 
 	}
 
@@ -119,15 +122,14 @@ public class Ccrcontroller {
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.AddTLrecruiter(hrid, hr_name, approver, add_team);
-		
-		
+
 	}
 
 	@PostMapping(value = "/changeapprover")
 	public ResponseEntity<String> ChangeApprover(@RequestParam Integer hrid, @RequestParam String hr_email) {
 
 		return ccrservice.ChangeApprover(hrid, hr_email);
-		
+
 	}
 
 }
