@@ -67,7 +67,6 @@ public class Ccrservice {
 
 	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
-		System.out.println();
 		hr.setHr_name(company.getHr().getHr_name());
 		company.setCompany_name(company.getCompany_name());
 		company.setHr(hr);
@@ -120,7 +119,7 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> AddAdminrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
 
@@ -147,7 +146,7 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
 	}
 
-	public ResponseEntity<String> AddTLrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
 
 		hr.setHr_name(hr_name);
@@ -231,7 +230,7 @@ public class Ccrservice {
 	
 	}
 
-	public ResponseEntity<?> candlogin(Long candidate_aadhar, String candidate_password) {
+	public ResponseEntity<String> candlogin(Long candidate_aadhar, String candidate_password) {
 		Session session = entityManager.unwrap(Session.class);
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);

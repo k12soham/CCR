@@ -109,19 +109,19 @@ public class Ccrcontroller {
 
 	}
 
-	@PostMapping(value = "/addAdminrecruiter")
-	public ResponseEntity<String> AddAdminrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	@PostMapping(value = "/Adminaddrecruiter")
+	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
-		return ccrservice.AddAdminrecruiter(hrid, hr_name, approver, add_team);
+		return ccrservice.AdminAddrecruiter(hrid, hr_name, approver, add_team);
 
 	}
 
-	@PostMapping(value = "/addTLrecruiter")
-	public ResponseEntity<String> AddTLrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	@PostMapping(value = "/TLaddrecruiter")
+	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
-		return ccrservice.AddTLrecruiter(hrid, hr_name, approver, add_team);
+		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
 
 	}
 
