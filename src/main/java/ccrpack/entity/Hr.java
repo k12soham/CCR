@@ -13,10 +13,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
 @Entity
-public class HrAdmin {
+public class Hr {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer hr_admin_id;
+	private Integer hr_id;
 	private String hr_name;
 	private Long hr_phone;
 	private String hr_email;
@@ -27,7 +27,7 @@ public class HrAdmin {
 	@JoinColumn(name = "company_id")
 	private Company company;
 
-	@OneToMany(mappedBy = "hrAdmin")
+	@OneToMany(mappedBy = "hr")
 	@JsonIgnore
 	private List<RatingForm> ratingform;
 
@@ -38,15 +38,15 @@ public class HrAdmin {
 	// @ManyToMany(mappedBy = "likedHr")
 	// List<Candidate> likes;
 
-	public HrAdmin() {
+	public Hr() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public HrAdmin(Integer hr_admin_id, String hr_name, Long hr_phone, String hr_email, String hr_password,
+	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password,
 			String hr_role, Company company, List<RatingForm> ratingform, Integer added_by, Integer approver) {
 		super();
-		this.hr_admin_id = hr_admin_id;
+		this.hr_id = hr_id;
 		this.hr_name = hr_name;
 		this.hr_phone = hr_phone;
 		this.hr_email = hr_email;
@@ -58,12 +58,12 @@ public class HrAdmin {
 		this.approver = approver;
 	}
 
-	public Integer getHr_admin_id() {
-		return hr_admin_id;
+	public Integer getHr_id() {
+		return hr_id;
 	}
 
-	public void setHr_admin_id(Integer hr_admin_id) {
-		this.hr_admin_id = hr_admin_id;
+	public void setHr_id(Integer hr_id) {
+		this.hr_id = hr_id;
 	}
 
 	public String getHr_name() {

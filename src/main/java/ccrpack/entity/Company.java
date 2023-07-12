@@ -22,7 +22,7 @@ public class Company {
 	private Long company_tan;
 
 	@OneToOne(mappedBy = "company")
-	private HrAdmin hradmin;
+	private Hr hr;
 
 	@OneToMany(mappedBy = "company")
 	@JsonIgnore
@@ -34,14 +34,14 @@ public class Company {
 	}
 
 	public Company(Integer company_id, String company_name, String company_address, Long company_phone,
-			Long company_tan, HrAdmin hradmin, List<RatingForm> ratingform) {
+			Long company_tan, Hr hr, List<RatingForm> ratingform) {
 		super();
 		this.company_id = company_id;
 		this.company_name = company_name;
 		this.company_address = company_address;
 		this.company_phone = company_phone;
 		this.company_tan = company_tan;
-		this.hradmin = hradmin;
+		this.hr = hr;
 		this.ratingform = ratingform;
 	}
 
@@ -85,12 +85,12 @@ public class Company {
 		this.company_tan = company_tan;
 	}
 
-	public HrAdmin getHradmin() {
-		return hradmin;
+	public Hr getHr() {
+		return hr;
 	}
 
-	public void setHradmin(HrAdmin hradmin) {
-		this.hradmin = hradmin;
+	public void setHr(Hr hr) {
+		this.hr = hr;
 	}
 
 	public List<RatingForm> getRatingform() {

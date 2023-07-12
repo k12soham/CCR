@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import ccrpack.entity.RatingForm;
 
-public interface RatingInter extends JpaRepository<RatingForm, Integer> {
+public interface RatingRepo extends JpaRepository<RatingForm, Integer> {
 
 }
