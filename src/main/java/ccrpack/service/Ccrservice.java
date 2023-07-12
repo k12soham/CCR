@@ -9,10 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import ccrpack.entity.Candidate;
+import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
+import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
@@ -39,29 +41,116 @@ public class Ccrservice {
 
 	@Autowired
 	CandidateRepo candidateRepo;
+	
+	
+	@Autowired
+	CcrRepo ccrRepo;
 
 	Hr hr = new Hr();
 	Company company = new Company();
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
-
+	CcrAdmin ccrAdmin = new CcrAdmin();
+	
+	
 	@PersistenceContext
 	EntityManager entityManager;
 
-//	public ResponseEntity<String> companyreg(String cname, Long tan, String hr_name, Long phone, String role) {
-//		Session session = entityManager.unwrap(Session.class);
-//
-//		company.setCompany_name(cname);
-//		company.setCompany_tan(tan);
-//		hr.setHr_name(hr_name);
-//		hr.setHr_phone(phone);
-//		hr.setHr_role(role);
-//		hr.setCompany(company);
-//
-//		session.save(company);
-//		session.save(hr);
-//		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate registered");
-//	}
+	public ResponseEntity<String> ccrLogin(CcrAdmin ccrAdmin) {
+		Session session = entityManager.unwrap(Session.class);
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<CcrAdmin> cr = cb.createQuery(CcrAdmin.class);
+
+			Root<CcrAdmin> root = cr.from(CcrAdmin.class);
+			cr.select(root).where(cb.equal(root.get("ccr_email"), ccrAdmin.getCcr_email()),
+					cb.equal(root.get("ccr_password"), ccrAdmin.getCcr_password()));
+
+			TypedQuery<CcrAdmin> query = session.createQuery(cr);
+
+			ccrAdmin = query.getSingleResult();
+
+			if (ccrAdmin != null) {
+				session.close();
+				return ResponseEntity.status(HttpStatus.OK).body("CCR Admin Login Sucessfully....");
+			}
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
+		}
+		return null;
+	}
+	
+
+	public ResponseEntity<String> candlogin(Candidate candidate) {
+		Session session = entityManager.unwrap(Session.class);
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+
+			Root<Candidate> root = cr.from(Candidate.class);
+			cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()),
+					cb.equal(root.get("candidate_password"), candidate.getCandidate_password()));
+
+			TypedQuery<Candidate> query = session.createQuery(cr);
+
+			candidate = query.getSingleResult();
+
+			if (candidate != null) {
+				session.close();
+				return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully");
+			}
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
+		}
+		return null;
+	}
+	
+
+	public ResponseEntity<String> registerCandidate(Candidate candidate) {
+		Session session = entityManager.unwrap(Session.class);
+
+		candidate.setCandidate_name(candidate.getCandidate_name());
+		candidate.setCandidate_aadhar(candidate.getCandidate_aadhar());
+		candidate.setCandidate_password(candidate.getCandidate_password());
+		candidate.setCandidate_dob(candidate.getCandidate_dob());
+		candidate.setCandidate_email(candidate.getCandidate_email());
+		candidate.setCandidate_phone(candidate.getCandidate_phone());
+
+		session.save(candidate);
+		session.close();
+		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered sucessfully");
+	}
+
+	
+
+	public ResponseEntity<String> hrlogin(Hr hr2) {
+		Session session = entityManager.unwrap(Session.class);
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+
+			Root<Hr> root = cr.from(Hr.class);
+			cr.select(root).where(cb.equal(root.get("hr_email"), hr.getHr_email()),
+					cb.equal(root.get("hr_password"), hr.getHr_password()));
+
+			TypedQuery<Hr> query = session.createQuery(cr);
+
+			hr = query.getSingleResult();
+
+			if (hr != null) {
+				session.close();
+				return ResponseEntity.status(HttpStatus.OK).body("Hr Login Sucessfully");
+			}
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
+		}
+		return null;
+	}
+	
+	
 
 	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
@@ -84,6 +173,10 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 	}
 
+	
+	
+	
+	////////////////////////////
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
 
@@ -128,7 +221,7 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> AddAdminrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
 
@@ -155,7 +248,7 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
 	}
 
-	public ResponseEntity<String> AddTLrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
 
 		hr.setHr_name(hr_name);
@@ -236,61 +329,6 @@ public class Ccrservice {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
 		}
 
-	}
-
-	public ResponseEntity<String> candlogin(Candidate candidate) {
-		Session session = entityManager.unwrap(Session.class);
-		try {
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate.getCandidate_aadhar()),
-		cb.equal(root.get("candidate_password"), candidate.getCandidate_password()));
-		
-		TypedQuery<Candidate> query = session.createQuery(cr);
-		
-		candidate = query.getSingleResult();
-		
-		if (candidate != null) {
-			session.close();
-			return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully....");
-		}
-	}catch(Exception e){
-		session.close();
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Candidate Not Found....");
-	}
-		return null;
-}
-//	public ResponseEntity<String> candregi(Long candidate_aadhar, String candidate_password, String candidate_name,
-//			String candidate_email, String candidate_phone, String candidate_dob) {
-//		Session session = entityManager.unwrap(Session.class);
-//		candidate.setCandidate_name(candidate_name);
-//		candidate.setCandidate_aadhar(candidate_aadhar);
-//		candidate.setCandidate_password(candidate_password);
-//		candidate.setCandidate_dob(candidate_dob);
-//		candidate.setCandidate_email(candidate_email);
-//		candidate.setCandidate_phone(candidate_phone);
-//		System.out.println("registeration sucess");
-//		session.save(candidate);
-//		session.close();
-//		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
-//
-//	}
-
-	public ResponseEntity<String> registerCandidate(Candidate candidate) {
-		Session session = entityManager.unwrap(Session.class);
-		
-		candidate.setCandidate_name(candidate.getCandidate_name());
-		candidate.setCandidate_aadhar(candidate.getCandidate_aadhar());
-		candidate.setCandidate_password(candidate.getCandidate_password());
-		candidate.setCandidate_dob(candidate.getCandidate_dob());
-		candidate.setCandidate_email(candidate.getCandidate_email());
-		candidate.setCandidate_phone(candidate.getCandidate_phone());
-		
-		session.save(candidate);
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered sucessfully");
 	}
 
 
