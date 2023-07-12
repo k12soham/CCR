@@ -20,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -220,6 +221,42 @@ public class Ccrservice {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
 		}
 	
+	}
+
+	public ResponseEntity<?> candlogin(Long candidate_aadhar, String candidate_password) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
+		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate_aadhar),
+				cb.equal(root.get("candidate_password"), candidate_password));
+		TypedQuery<Candidate> query = session.createQuery(cr);
+		Candidate cand = ((org.hibernate.query.Query<Candidate>) query).uniqueResult();
+		if (cand != null) {
+			session.save(cand);
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully....");
+		} else {
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("Candidate Not Found....");
+		}
+		}
+
+	public ResponseEntity<String> candregi(Long candidate_aadhar, String candidate_password, String candidate_name,
+			String candidate_email, String candidate_phone, String candidate_dob) {
+		Session session = entityManager.unwrap(Session.class);
+		cand.setCandidate_name(candidate_name);
+		cand.setCandidate_aadhar(candidate_aadhar);
+		cand.setCandidate_password(candidate_password);
+		cand.setCandidate_dob(candidate_dob);
+		cand.setCandidate_email(candidate_email);
+		cand.setCandidate_phone(candidate_phone);
+		System.out.println("registeration sucess");
+		session.save(cand);
+		session.close();
+		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
+		
+
 	}
 
 }
