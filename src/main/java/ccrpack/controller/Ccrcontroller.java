@@ -2,10 +2,7 @@ package ccrpack.controller;
 
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.persister.collection.mutation.RowMutationOperations.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ccrpack.entity.Candidate;
+import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.RatingForm;
@@ -25,13 +23,7 @@ import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
 import ccrpack.service.Ccrservice;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 @CrossOrigin
 @RestController
@@ -59,39 +51,48 @@ public class Ccrcontroller {
 	@PersistenceContext
 	EntityManager entityManager;
 
-    /////////Yash///////////////////////
-
-	@PostMapping(value = "/candidateregi")
-	public ResponseEntity<String> candregi(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password,
-			@RequestParam String candidate_name, @RequestParam String candidate_email,
-			@RequestParam String candidate_phone, @RequestParam String candidate_dob)
-	{
-			return ccrservice.candregi(candidate_aadhar, candidate_password,candidate_name,candidate_email,candidate_phone,candidate_dob);
+	// Login CCR Admin
+	@PostMapping(value = "/ccradminlogin")
+	public ResponseEntity<String> ccrLogin(@RequestBody CcrAdmin ccrAdmin) {
+		return ccrservice.ccrLogin(ccrAdmin);
 	}
+
+	// Login Candidate
 	@PostMapping(value = "/candidatelogin")
-	public ResponseEntity<?> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password)
-	{
-		return ccrservice.candlogin(candidate_aadhar, candidate_password);
-	}
-	@PutMapping(value = "/candchangepass")
-	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
-			@RequestParam String newpass) {
-			return ccrservice.changePassword(candidate_id, currentpass,newpass);
+	public ResponseEntity<String> candlogin(@RequestBody Candidate candidate) {
+		return ccrservice.candlogin(candidate);
 	}
 
+	// Register Candidate
+	@PostMapping(value = "/registercandidate")
+	public ResponseEntity<String> registerCandidate(@RequestBody Candidate candidate) {
+		return ccrservice.registerCandidate(candidate);
+	}
+	
+	// HR Login
+		@PostMapping(value = "/hrlogin")
+		public ResponseEntity<String> hrlogin(@RequestBody Hr hr) {
+			return ccrservice.hrlogin(hr);
+		}
 
-//	@PostMapping(value = "/addcomapny")
-//	public ResponseEntity<String> companyreg(@RequestParam String cname, @RequestParam Long tan,
-//			@RequestParam String hr_name, @RequestParam Long phone, @RequestParam String role) {
-//
-//		return ccrservice.companyreg(cname, tan, hr_name, phone, role);
-//
-//	}
+	
+	//Company & HR Registration
 	@PostMapping(value = "/addcomapny")
 	public ResponseEntity<String> companyReg(@RequestBody Company company) {
 
 		return ccrservice.companyReg(company);
 
+	}
+
+	
+	
+	
+  //////////////////////////////////
+
+	@PutMapping(value = "/candchangepass")
+	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.changePassword(candidate_id, currentpass, newpass);
 	}
 
 	@PostMapping(value = "/rating")
