@@ -39,7 +39,7 @@ public class Candidate {
 
 	public Candidate(Integer candidate_id, Long candidate_aadhar, String candidate_name, String candidate_email,
 			String candidate_password, String candidate_phone, String candidate_dob, List<RatingForm> ratingform,
-			List<HrAdmin> likedHr) {
+			List<Hr> likedHr) {
 		super();
 		this.candidate_id = candidate_id;
 		this.candidate_aadhar = candidate_aadhar;

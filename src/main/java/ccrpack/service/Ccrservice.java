@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 import ccrpack.entity.Candidate;
 import ccrpack.entity.Company;
-import ccrpack.entity.HrAdmin;
+import ccrpack.entity.Hr;
 import ccrpack.entity.RatingForm;
-import ccrpack.repo.CandInter;
-import ccrpack.repo.CompanyInter;
-import ccrpack.repo.HrInter;
-import ccrpack.repo.RatingInter;
+import ccrpack.repo.CandidateRepo;
+import ccrpack.repo.CompanyRepo;
+import ccrpack.repo.HrRepo;
+import ccrpack.repo.RatingRepo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
@@ -25,72 +25,79 @@ import jakarta.persistence.criteria.Root;
 
 @Service
 public class Ccrservice {
-	
-	
-	@Autowired
-	CompanyInter comp;
 
 	@Autowired
-	HrInter hri;
-	
-	
-	@Autowired
-	RatingInter ri;
-	
-	@Autowired
-	CandInter candinter;
+	CompanyRepo companyRepo;
 
-	
+	@Autowired
+	HrRepo hrRepo;
 
-	HrAdmin hra = new HrAdmin();
-	Company cm = new Company();
-	RatingForm rf=  new RatingForm();
-	Candidate cand= new Candidate();
-	
-	
+	@Autowired
+	RatingRepo ratingRepo;
+
+	@Autowired
+	CandidateRepo candidateRepo;
+
+	Hr hr = new Hr();
+	Company company = new Company();
+	RatingForm ratingForm = new RatingForm();
+	Candidate candidate = new Candidate();
+
 	@PersistenceContext
 	EntityManager entityManager;
 
-	public ResponseEntity<String> companyreg(String cname, Long tan, String hr_name, Long phone, String role) {
+//	public ResponseEntity<String> companyreg(String cname, Long tan, String hr_name, Long phone, String role) {
+//		Session session = entityManager.unwrap(Session.class);
+//
+//		company.setCompany_name(cname);
+//		company.setCompany_tan(tan);
+//		hr.setHr_name(hr_name);
+//		hr.setHr_phone(phone);
+//		hr.setHr_role(role);
+//		hr.setCompany(company);
+//
+//		session.save(company);
+//		session.save(hr);
+//		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate registered");
+//	}
+
+	
+
+	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
-
-		cm.setCompany_name(cname);
-		cm.setCompany_tan(tan);
-		hra.setHr_name(hr_name);
-		hra.setHr_phone(phone);
-		hra.setHr_role(role);
-		hra.setCompany(cm);
-		
-
-		session.save(cm);
-		session.save(hra);
-		 return ResponseEntity.status(HttpStatus.CREATED).body("Candidate registered");
+		System.out.println();
+		hr.setHr_name(company.getHr().getHr_name());
+		company.setCompany_name(company.getCompany_name());
+		company.setHr(hr);
+		session.save(hr);
+		session.save(company);
+		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 	}
-
-	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total,int candidate_id, int total2, int rec_id) {
+	
+	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
 
-		rf.setQ1(q1);
-		rf.setQ2(q2);
-		rf.setRating_total(total);
-		cand.setCandidate_id(candidate_id);
-		hra.setHr_admin_id(rec_id);
-		rf.setCandidate(cand);
-		rf.setHrAdmin(hra);
+		ratingForm.setQ1(q1);
+		ratingForm.setQ2(q2);
+		ratingForm.setRating_total(total);
+		candidate.setCandidate_id(candidate_id);
+		hr.setHr_id(rec_id);
+		ratingForm.setCandidate(candidate);
+		ratingForm.setHr(hr);
 
-		hra = hri.getById(rec_id);
-		int a = hra.getApprover();
-		hra = hri.getById(a);
-		int b = hra.getHr_admin_id();
+		hr = hrRepo.getById(rec_id);
+		int a = hr.getApprover();
+		hr = hrRepo.getById(a);
+		int b = hr.getHr_id();
 
-		rf.setNew_request(true);
-		rf.setApprover_id(b);
+		ratingForm.setNew_request(true);
+		ratingForm.setApprover_id(b);
 
-		session.save(rf);
-		hri.save(hra);
+		session.save(ratingForm);
+		hrRepo.save(hr);
 		session.close();
 		return ResponseEntity.status(HttpStatus.CREATED).body("Rating added");
-		
+
 	}
 
 	public List<RatingForm> Getrequest(int rec_id) {
@@ -105,34 +112,34 @@ public class Ccrservice {
 
 		Query query = session.createQuery(cr);
 		List<RatingForm> results = query.getResultList();
-		
+
 		session.close();
 		return results;
-		
+
 	}
 
 	public ResponseEntity<String> AddAdminrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
 
-		hra.setHr_name(hr_name);
-		hra.setAdded_by(hrid);
-		session.save(hra);
+		hr.setHr_name(hr_name);
+		hr.setAdded_by(hrid);
+		session.save(hr);
 		if (approver == true && add_team == true) {
-			int a = hra.getHr_admin_id();
+			int a = hr.getHr_id();
 			System.out.println(a);
-			hra.setApprover(a);
+			hr.setApprover(a);
 
-			hra.setHr_role("Admin");
+			hr.setHr_role("Admin");
 		} else if (approver == false && add_team == true) {
-			hra.setApprover(hrid);
-			hra.setHr_role("TeamLead");
+			hr.setApprover(hrid);
+			hr.setHr_role("TeamLead");
 		} else {
-			hra.setApprover(hrid);
-			hra.setHr_role("Rec");
+			hr.setApprover(hrid);
+			hr.setHr_role("Rec");
 		}
 
-		hri.save(hra);
+		hrRepo.save(hr);
 
 		session.close();
 		return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
@@ -141,59 +148,64 @@ public class Ccrservice {
 	public ResponseEntity<String> AddTLrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
 
-		hra.setHr_name(hr_name);
-		hra.setAdded_by(hrid);
-		session.save(hra);
+		hr.setHr_name(hr_name);
+		hr.setAdded_by(hrid);
+		session.save(hr);
 
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 
-		CriteriaQuery<HrAdmin> cr = cb.createQuery(HrAdmin.class);
-		Root<HrAdmin> root = cr.from(HrAdmin.class);
+		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+		Root<Hr> root = cr.from(Hr.class);
 		cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
 		Query query = session.createQuery(cr);
-		HrAdmin z = (HrAdmin) query.getSingleResult();
+		Hr z = (Hr) query.getSingleResult();
 		int b = z.getApprover();
 		System.out.println(b);
 
 		int a = 5;
 
 		if (approver == false && add_team == true) {
-			hra.setApprover(b);
-			hra.setHr_role("TeamLead");
+			hr.setApprover(b);
+			hr.setHr_role("TeamLead");
 		} else {
-			hra.setApprover(b);
-			hra.setHr_role("Rec");
+			hr.setApprover(b);
+			hr.setHr_role("Rec");
 		}
 
-		hri.save(hra);
+		hrRepo.save(hr);
 
 		session.close();
 		return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
 
 	}
 
-	public  ResponseEntity<String>  ChangeApprover(Integer hrid, String hr_email) {
+	public ResponseEntity<String> ChangeApprover(Integer hrid, String hr_email) {
 		Session session = entityManager.unwrap(Session.class);
 
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 
-		CriteriaQuery<HrAdmin> cr = cb.createQuery(HrAdmin.class);
-		Root<HrAdmin> root = cr.from(HrAdmin.class);
+		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+		Root<Hr> root = cr.from(Hr.class);
 		cr.select(root).where((cb.equal(root.get("hr_email"), hr_email)));
 		Query query = session.createQuery(cr);
-		HrAdmin z = (HrAdmin) query.getSingleResult();
+		Hr z = (Hr) query.getSingleResult();
 		System.out.println(z);
 		if (z == null) {
-		 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
 
 		} else {
 
 			z.setApprover(hrid);
-			hri.save(z);
+			hrRepo.save(z);
 			return ResponseEntity.status(HttpStatus.CREATED).body("Approver changed");
 
 		}
 
 	}
+
+
+
+	
+
 
 }
