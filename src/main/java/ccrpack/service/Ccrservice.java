@@ -63,19 +63,27 @@ public class Ccrservice {
 //		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate registered");
 //	}
 
-	
-
 	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
-		System.out.println();
+
 		hr.setHr_name(company.getHr().getHr_name());
+		hr.setHr_phone(company.getHr().getHr_phone());
+		hr.setHr_email(company.getHr().getHr_email());
+		hr.setHr_password(company.getHr().getHr_password());
+		hr.setHr_role(company.getHr().getHr_role());
+		hr.setRatingform(company.getHr().getRatingform());
+
 		company.setCompany_name(company.getCompany_name());
+		company.setCompany_address(company.getCompany_address());
+		company.setCompany_phone(company.getCompany_phone());
+		company.setCompany_tan(company.getCompany_tan());
+
 		company.setHr(hr);
 		session.save(hr);
 		session.save(company);
 		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 	}
-	
+
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
 
@@ -205,9 +213,8 @@ public class Ccrservice {
 
 	}
 
+	public ResponseEntity<String> changePassword(int candidate_id, String currentpass, String newpass) {
 
-	public ResponseEntity<String> changePassword(int candidate_id, String currentpass,String newpass) {
-		
 		Session session = entityManager.unwrap(Session.class);
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
@@ -222,51 +229,70 @@ public class Ccrservice {
 			candidate.setCandidate_password(newpass);
 			candidateRepo.save(candidate);
 			session.close();
-			
-			 return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+
+			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
 		} catch (NoResultException e) {
 			session.close();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
 		}
-	
+
 	}
 
-	public ResponseEntity<?> candlogin(Long candidate_aadhar, String candidate_password) {
+	public ResponseEntity<String> candlogin(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
+		try {
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		
 		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate_aadhar),
-				cb.equal(root.get("candidate_password"), candidate_password));
+		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate.getCandidate_aadhar()),
+		cb.equal(root.get("candidate_password"), candidate.getCandidate_password()));
+		
 		TypedQuery<Candidate> query = session.createQuery(cr);
-		Candidate candidate = ((org.hibernate.query.Query<Candidate>) query).uniqueResult();
+		
+		candidate = query.getSingleResult();
+		
 		if (candidate != null) {
-			session.save(candidate);
 			session.close();
 			return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully....");
-		} else {
-			session.close();
-			return ResponseEntity.status(HttpStatus.OK).body("Candidate Not Found....");
 		}
-		}
+	}catch(Exception e){
+		session.close();
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Candidate Not Found....");
+	}
+		return null;
+}
+//	public ResponseEntity<String> candregi(Long candidate_aadhar, String candidate_password, String candidate_name,
+//			String candidate_email, String candidate_phone, String candidate_dob) {
+//		Session session = entityManager.unwrap(Session.class);
+//		candidate.setCandidate_name(candidate_name);
+//		candidate.setCandidate_aadhar(candidate_aadhar);
+//		candidate.setCandidate_password(candidate_password);
+//		candidate.setCandidate_dob(candidate_dob);
+//		candidate.setCandidate_email(candidate_email);
+//		candidate.setCandidate_phone(candidate_phone);
+//		System.out.println("registeration sucess");
+//		session.save(candidate);
+//		session.close();
+//		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
+//
+//	}
 
-	public ResponseEntity<String> candregi(Long candidate_aadhar, String candidate_password, String candidate_name,
-			String candidate_email, String candidate_phone, String candidate_dob)
-	{
+	public ResponseEntity<String> registerCandidate(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
-		candidate.setCandidate_name(candidate_name);
-		candidate.setCandidate_aadhar(candidate_aadhar);
-		candidate.setCandidate_password(candidate_password);
-		candidate.setCandidate_dob(candidate_dob);
-		candidate.setCandidate_email(candidate_email);
-		candidate.setCandidate_phone(candidate_phone);
-		System.out.println("registeration sucess");
+		
+		candidate.setCandidate_name(candidate.getCandidate_name());
+		candidate.setCandidate_aadhar(candidate.getCandidate_aadhar());
+		candidate.setCandidate_password(candidate.getCandidate_password());
+		candidate.setCandidate_dob(candidate.getCandidate_dob());
+		candidate.setCandidate_email(candidate.getCandidate_email());
+		candidate.setCandidate_phone(candidate.getCandidate_phone());
+		
 		session.save(candidate);
 		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
-		
-
+		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered sucessfully");
 	}
+
 
 
 }

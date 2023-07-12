@@ -61,18 +61,29 @@ public class Ccrcontroller {
 
     /////////Yash///////////////////////
 
-	@PostMapping(value = "/candidateregi")
-	public ResponseEntity<String> candregi(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password,
-			@RequestParam String candidate_name, @RequestParam String candidate_email,
-			@RequestParam String candidate_phone, @RequestParam String candidate_dob)
-	{
-			return ccrservice.candregi(candidate_aadhar, candidate_password,candidate_name,candidate_email,candidate_phone,candidate_dob);
-	}
+//	@PostMapping(value = "/candidateregi")
+//	public ResponseEntity<String> candregi(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password,
+//			@RequestParam String candidate_name, @RequestParam String candidate_email,
+//			@RequestParam String candidate_phone, @RequestParam String candidate_dob)
+//	{
+//			return ccrservice.candregi(candidate_aadhar, candidate_password,candidate_name,candidate_email,candidate_phone,candidate_dob);
+//	}
+	
+	
+//	@PostMapping(value = "/candidatelogin")
+//	public ResponseEntity<String> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password)
+//	{
+//		return ccrservice.candlogin(candidate_aadhar, candidate_password);
+//	}
+//	
+	
+	
 	@PostMapping(value = "/candidatelogin")
-	public ResponseEntity<?> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password)
+	public ResponseEntity<?> candlogin(@RequestBody Candidate candidate)
 	{
-		return ccrservice.candlogin(candidate_aadhar, candidate_password);
+		return ccrservice.candlogin(candidate);
 	}
+	
 	@PutMapping(value = "/candchangepass")
 	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
 			@RequestParam String newpass) {
@@ -87,6 +98,7 @@ public class Ccrcontroller {
 //		return ccrservice.companyreg(cname, tan, hr_name, phone, role);
 //
 //	}
+	
 	@PostMapping(value = "/addcomapny")
 	public ResponseEntity<String> companyReg(@RequestBody Company company) {
 
@@ -131,5 +143,10 @@ public class Ccrcontroller {
 		return ccrservice.ChangeApprover(hrid, hr_email);
 
 	}
-
+	
+	//Register Candidate to CCR
+	@PostMapping(value ="/registercandidate")
+	 public ResponseEntity<String> registerCandidate(@RequestBody Candidate candidate) {
+		 return ccrservice.registerCandidate(candidate);
+		}
 }
