@@ -17,8 +17,10 @@ import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -204,8 +206,67 @@ public class Ccrservice {
 	}
 
 
-
+	public ResponseEntity<String> changePassword(int candidate_id, String currentpass,String newpass) {
+		
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
+		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
+				cb.equal(root.get("candidate_password"), currentpass));
+		Query query = session.createQuery(cr);
+		Candidate results = null;
+		try {
+			results = (Candidate) query.getSingleResult();
+			candidate = candidateRepo.getById(candidate_id);
+			candidate.setCandidate_password(newpass);
+			candidateRepo.save(candidate);
+			session.close();
+			
+			 return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+		} catch (NoResultException e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+		}
 	
+	}
+
+	public ResponseEntity<?> candlogin(Long candidate_aadhar, String candidate_password) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
+		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate_aadhar),
+				cb.equal(root.get("candidate_password"), candidate_password));
+		TypedQuery<Candidate> query = session.createQuery(cr);
+		Candidate candidate = ((org.hibernate.query.Query<Candidate>) query).uniqueResult();
+		if (candidate != null) {
+			session.save(candidate);
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully....");
+		} else {
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("Candidate Not Found....");
+		}
+		}
+
+	public ResponseEntity<String> candregi(Long candidate_aadhar, String candidate_password, String candidate_name,
+			String candidate_email, String candidate_phone, String candidate_dob)
+	{
+		Session session = entityManager.unwrap(Session.class);
+		candidate.setCandidate_name(candidate_name);
+		candidate.setCandidate_aadhar(candidate_aadhar);
+		candidate.setCandidate_password(candidate_password);
+		candidate.setCandidate_dob(candidate_dob);
+		candidate.setCandidate_email(candidate_email);
+		candidate.setCandidate_phone(candidate_phone);
+		System.out.println("registeration sucess");
+		session.save(candidate);
+		session.close();
+		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
+		
+
+	}
 
 
 }

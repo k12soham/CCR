@@ -59,72 +59,24 @@ public class Ccrcontroller {
 	@PersistenceContext
 	EntityManager entityManager;
 
-//	 @PostMapping(value ="/addcandidate")
-//     public ResponseEntity<String> createCandidate(@RequestBody Candidate candidate) {
-//         ccrService.createCandidate(candidate);
-//         return ResponseEntity.status(HttpStatus.CREATED).body("Candidate data submitted");
-//     }
+    /////////Yash///////////////////////
 
 	@PostMapping(value = "/candidateregi")
 	public ResponseEntity<String> candregi(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password,
 			@RequestParam String candidate_name, @RequestParam String candidate_email,
-			@RequestParam String candidate_phone, @RequestParam String candidate_dob) {
-
-		Session session = entityManager.unwrap(Session.class);
-		cand.setCandidate_name(candidate_name);
-		cand.setCandidate_aadhar(candidate_aadhar);
-		cand.setCandidate_password(candidate_password);
-		cand.setCandidate_dob(candidate_dob);
-		cand.setCandidate_email(candidate_email);
-		cand.setCandidate_phone(candidate_phone);
-		System.out.println("registeration sucess");
-		session.save(cand);
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate registered");
+			@RequestParam String candidate_phone, @RequestParam String candidate_dob)
+	{
+			return ccrservice.candregi(candidate_aadhar, candidate_password,candidate_name,candidate_email,candidate_phone,candidate_dob);
 	}
-
 	@PostMapping(value = "/candidatelogin")
-	public ResponseEntity<?> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password) {
-		Session session = entityManager.unwrap(Session.class);
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate_aadhar),
-				cb.equal(root.get("candidate_password"), candidate_password));
-		TypedQuery<Candidate> query = session.createQuery(cr);
-		Candidate cand = ((org.hibernate.query.Query<Candidate>) query).uniqueResult();
-		if (cand != null) {
-			System.out.println("Login Candidate success");
-			session.save(cand);
-		} else {
-			System.out.println("Candidate not found");
-		}
-		session.close();
-		return new ResponseEntity<>(cand, HttpStatus.OK);
+	public ResponseEntity<?> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password)
+	{
+		return ccrservice.candlogin(candidate_aadhar, candidate_password);
 	}
-
 	@PutMapping(value = "/candchangepass")
-	public ResponseEntity<?> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
+	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
 			@RequestParam String newpass) {
-		Session session = entityManager.unwrap(Session.class);
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
-				cb.equal(root.get("candidate_password"), currentpass));
-		Query query = session.createQuery(cr);
-		Candidate results = null;
-		try {
-			results = (Candidate) query.getSingleResult();
-			cand = candinter.getById(candidate_id);
-			cand.setCandidate_password(newpass);
-			candinter.save(cand);
-			session.close();
-			return new ResponseEntity<>(cand, HttpStatus.OK);
-		} catch (NoResultException e) {
-			session.close();
-			return (ResponseEntity<?>) ResponseEntity.badRequest().body(" Current Password doesn't match...");
-		}
+			return ccrservice.changePassword(candidate_id, currentpass,newpass);
 	}
 
 
