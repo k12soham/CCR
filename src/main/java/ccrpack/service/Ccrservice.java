@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import ccrpack.entity.Candidate;
+import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.HrAdmin;
 import ccrpack.entity.RatingForm;
@@ -48,6 +49,7 @@ public class Ccrservice {
 	Company cm = new Company();
 	RatingForm rf=  new RatingForm();
 	Candidate cand= new Candidate();
+	CcrAdmin cadmin=new CcrAdmin();
 	
 	
 	@PersistenceContext
@@ -223,12 +225,12 @@ public class Ccrservice {
 	
 	}
 
-	public ResponseEntity<?> candlogin(Long candidate_aadhar, String candidate_password) {
+	public ResponseEntity<?> candlogin(String candidate_email, String candidate_password) {
 		Session session = entityManager.unwrap(Session.class);
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
 		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_aadhar"), candidate_aadhar),
+		cr.select(root).where(cb.equal(root.get("candidate_email"), candidate_email),
 				cb.equal(root.get("candidate_password"), candidate_password));
 		TypedQuery<Candidate> query = session.createQuery(cr);
 		Candidate cand = ((org.hibernate.query.Query<Candidate>) query).uniqueResult();
@@ -251,12 +253,82 @@ public class Ccrservice {
 		cand.setCandidate_dob(candidate_dob);
 		cand.setCandidate_email(candidate_email);
 		cand.setCandidate_phone(candidate_phone);
-		System.out.println("registeration sucess");
 		session.save(cand);
 		session.close();
 		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered Sucessfully....");
 		
 
 	}
+
+	public ResponseEntity<?> hrAdminlogin(String hr_email, String hr_password) {
+		
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<HrAdmin> cr = cb.createQuery(HrAdmin.class);
+		Root<HrAdmin> root = cr.from(HrAdmin.class);
+		cr.select(root).where(cb.equal(root.get("hr_email"), hr_email),
+				cb.equal(root.get("hr_password"), hr_password));
+		TypedQuery<HrAdmin> query = session.createQuery(cr);
+		HrAdmin hra = ((org.hibernate.query.Query<HrAdmin>) query).uniqueResult();
+		if (hra != null) {
+			session.save(hra);
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("HR Admin Login Sucessfully....");
+		} else {
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("HR Admin Record Not Found....");
+		}
+		
+	
+	}
+
+	public ResponseEntity<?> ccrAdminlogin(String ccr_email, String ccr_password) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<CcrAdmin> cr = cb.createQuery(CcrAdmin.class);
+		Root<CcrAdmin> root = cr.from(CcrAdmin.class);
+		cr.select(root).where(cb.equal(root.get("ccr_email"), ccr_email),
+				cb.equal(root.get("ccr_password"), ccr_password));
+		TypedQuery<CcrAdmin> query = session.createQuery(cr);
+		CcrAdmin cadmin = ((org.hibernate.query.Query<CcrAdmin>) query).uniqueResult();
+		if (cadmin != null) {
+			session.save(cadmin);
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("CCR Admin Login Sucessfully....");
+		} else {
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("CCR Admin Record Not Found....");
+		}
+		
+	
+	}
+
+//	public ResponseEntity<String> hradminchangepass(int hr_admin_id, String currentpass, String newpass) {
+//		
+//		Session session = entityManager.unwrap(Session.class);
+//		CriteriaBuilder cb = session.getCriteriaBuilder();
+//		CriteriaQuery<HrAdmin> cr = cb.createQuery(HrAdmin.class);
+//		Root<HrAdmin> root = cr.from(HrAdmin.class);
+//		cr.select(root).where(cb.equal(root.get("hr_admin_id"), hr_admin_id),
+//				cb.equal(root.get("hr_password"), currentpass));
+//		Query query = session.createQuery(cr);
+//		HrAdmin results = null;
+//		try {
+//			results = (HrAdmin) query.getSingleResult();
+//			hra = HrInter.getById(hr_admin_id);
+//			hra.setHr_password(newpass);
+//			hri.save(hra);
+//			session.close();
+//			
+//			 return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+//		} catch (NoResultException e) {
+//			session.close();
+//			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+//		}
+//	
+//		
+//	}
+
+	
 
 }

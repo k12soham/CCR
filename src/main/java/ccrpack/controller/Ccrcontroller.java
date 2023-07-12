@@ -68,18 +68,43 @@ public class Ccrcontroller {
 			return ccrservice.candregi(candidate_aadhar, candidate_password,candidate_name,candidate_email,candidate_phone,candidate_dob);
 	}
 	@PostMapping(value = "/candidatelogin")
-	public ResponseEntity<?> candlogin(@RequestParam Long candidate_aadhar, @RequestParam String candidate_password)
+	public ResponseEntity<?> candlogin(@RequestParam String candidate_email, @RequestParam String candidate_password)
 	{
-		return ccrservice.candlogin(candidate_aadhar, candidate_password);
+		return ccrservice.candlogin(candidate_email, candidate_password);
 	}
+	
+
+	
 	@PutMapping(value = "/candchangepass")
 	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
 			@RequestParam String newpass) {
 			return ccrservice.changePassword(candidate_id, currentpass,newpass);
 	}
+	/////HrAdmin Login////
+	@PostMapping(value = "/hrAdminlogin")
+	public ResponseEntity<?> hrAdminlogin(@RequestParam String hr_email, @RequestParam String hr_password)
+	{
+		return ccrservice.hrAdminlogin(hr_email, hr_password);
+	}
+	//////CCR Admin Login//////
+	@PostMapping(value = "/ccrAdminlogin")
+	public ResponseEntity<?> ccrAdminlogin(@RequestParam String ccr_email, @RequestParam String ccr_password)
+	{
+		return ccrservice.ccrAdminlogin(ccr_email, ccr_password);
+	}
+//	@PutMapping(value = "/hradminchangepass")
+//	public ResponseEntity<String> hradminchangepass(@RequestParam int hr_admin_id, @RequestParam String currentpass,
+//			@RequestParam String newpass) {
+//			return ccrservice.hradminchangepass(hr_admin_id, currentpass,newpass);
+//	}
+	
+	
+	
+	
+	
 
 	///////////// SOHAM////////////////////
-
+	//Hr Admin and Company registration
 	@PostMapping(value = "/addcomapny")
 	public ResponseEntity<String> companyreg(@RequestParam String cname, @RequestParam Long tan,
 			@RequestParam String hr_name, @RequestParam Long phone, @RequestParam String role) {
