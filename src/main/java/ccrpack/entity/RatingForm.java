@@ -26,12 +26,13 @@ public class RatingForm {
 	private boolean approve;
 	private boolean new_request;
 
+
 	@ManyToOne
 	@JoinColumn(name = "candidate_id")
 	private Candidate candidate;
 
 	@ManyToOne
-	@JoinColumn(name = "hr_admin_id")
+	@JoinColumn(name = "hr_id")
 	private Hr hr;
 
 	private Integer approver_id;
@@ -212,5 +213,4 @@ public class RatingForm {
 	public void setApprover_id(Integer approver_id) {
 		this.approver_id = approver_id;
 	}
-
 }
