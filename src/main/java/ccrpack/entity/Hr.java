@@ -36,8 +36,8 @@ public class Hr {
 
 	private Integer approver;
 
-	 @ManyToMany(mappedBy = "likedHr")
-	 List<Candidate> likes;
+//	 @ManyToMany(mappedBy = "likedHr")
+//	 List<Candidate> likes;
 
 	public Hr() {
 		super();

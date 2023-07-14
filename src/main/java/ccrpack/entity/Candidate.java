@@ -31,9 +31,9 @@ public class Candidate {
 	@JsonIgnore
 	private List<RatingForm> ratingform;
 
-	@ManyToMany
-	@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_id"))
-	List<Hr> likedHr;
+//	@ManyToMany
+//	@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_id"))
+//	List<Hr> likedHr;
 
 	public Candidate() {
 		super();
