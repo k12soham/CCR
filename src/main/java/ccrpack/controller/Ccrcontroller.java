@@ -3,6 +3,7 @@ package ccrpack.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ import ccrpack.service.Ccrservice;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-@CrossOrigin
+@CrossOrigin(origins="http://localhost:3000")
 @RestController
 public class Ccrcontroller {
 	@Autowired
@@ -84,8 +85,12 @@ public class Ccrcontroller {
 
 	}
 
-	
-	
+	//rating form data save for yes no questions and calculate total score 
+	@PostMapping(value = "/saveYesNo")
+	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm){
+		return ccrservice.saveYesNoAns(ratingForm);
+	}
+
 	
   //////////////////////////////////
 
