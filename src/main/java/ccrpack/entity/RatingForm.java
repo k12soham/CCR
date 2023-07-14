@@ -31,7 +31,7 @@ public class RatingForm {
 	private Candidate candidate;
 
 	@ManyToOne
-	@JoinColumn(name = "hr_admin_id")
+	@JoinColumn(name = "hr_id")
 	private Hr hr;
 
 	private Integer approver_id;

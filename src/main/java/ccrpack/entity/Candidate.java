@@ -29,7 +29,7 @@ public class Candidate {
 	private List<RatingForm> ratingform;
 
 	//@ManyToMany
-	//@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_admin_id"))
+	//@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_id"))
 	//List<HrAdmin> likedHr;
 
 	public Candidate() {

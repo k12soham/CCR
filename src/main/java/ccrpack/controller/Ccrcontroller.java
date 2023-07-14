@@ -53,13 +53,13 @@ public class Ccrcontroller {
 
 	// Login CCR Admin
 	@PostMapping(value = "/ccradminlogin")
-	public ResponseEntity<String> ccrLogin(@RequestBody CcrAdmin ccrAdmin) {
+	public ResponseEntity<?> ccrLogin(@RequestBody CcrAdmin ccrAdmin) {
 		return ccrservice.ccrLogin(ccrAdmin);
 	}
 
 	// Login Candidate
 	@PostMapping(value = "/candidatelogin")
-	public ResponseEntity<String> candlogin(@RequestBody Candidate candidate) {
+	public ResponseEntity<?> candlogin(@RequestBody Candidate candidate) {
 		return ccrservice.candlogin(candidate);
 	}
 
@@ -71,7 +71,7 @@ public class Ccrcontroller {
 	
 	// HR Login
 		@PostMapping(value = "/hrlogin")
-		public ResponseEntity<String> hrlogin(@RequestBody Hr hr) {
+		public ResponseEntity<?> hrlogin(@RequestBody Hr hr) {
 			return ccrservice.hrlogin(hr);
 		}
 
@@ -111,10 +111,10 @@ public class Ccrcontroller {
 	}
 
 	@PostMapping(value = "/Adminaddrecruiter")
-	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,@RequestParam String hr_email,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
-		return ccrservice.AdminAddrecruiter(hrid, hr_name, approver, add_team);
+		return ccrservice.AdminAddrecruiter(hrid, hr_name,hr_email, approver, add_team);
 
 	}
 

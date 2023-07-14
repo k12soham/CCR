@@ -41,8 +41,7 @@ public class Ccrservice {
 
 	@Autowired
 	CandidateRepo candidateRepo;
-	
-	
+
 	@Autowired
 	CcrRepo ccrRepo;
 
@@ -51,12 +50,11 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
-	
-	
+
 	@PersistenceContext
 	EntityManager entityManager;
 
-	public ResponseEntity<String> ccrLogin(CcrAdmin ccrAdmin) {
+	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -72,7 +70,8 @@ public class Ccrservice {
 
 			if (ccrAdmin != null) {
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("CCR Admin Login Sucessfully....");
+				return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
+				
 			}
 		} catch (Exception e) {
 			session.close();
@@ -80,9 +79,8 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
 
-	public ResponseEntity<String> candlogin(Candidate candidate) {
+	public ResponseEntity<?> candlogin(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -98,7 +96,8 @@ public class Ccrservice {
 
 			if (candidate != null) {
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully");
+				return new ResponseEntity<>(candidate, HttpStatus.OK);
+				
 			}
 		} catch (Exception e) {
 			session.close();
@@ -106,7 +105,6 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
 
 	public ResponseEntity<String> registerCandidate(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
@@ -123,25 +121,24 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered sucessfully");
 	}
 
-	
-
-	public ResponseEntity<String> hrlogin(Hr hr2) {
+	public ResponseEntity<?> hrlogin(Hr hr) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
+
 			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-
 			Root<Hr> root = cr.from(Hr.class);
 			cr.select(root).where(cb.equal(root.get("hr_email"), hr.getHr_email()),
 					cb.equal(root.get("hr_password"), hr.getHr_password()));
-
 			TypedQuery<Hr> query = session.createQuery(cr);
 
 			hr = query.getSingleResult();
 
 			if (hr != null) {
+
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("Hr Login Sucessfully");
+				return new ResponseEntity<>(hr, HttpStatus.OK);
+
 			}
 		} catch (Exception e) {
 			session.close();
@@ -149,8 +146,6 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
-	
 
 	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
@@ -159,7 +154,7 @@ public class Ccrservice {
 		hr.setHr_phone(company.getHr().getHr_phone());
 		hr.setHr_email(company.getHr().getHr_email());
 		hr.setHr_password(company.getHr().getHr_password());
-		hr.setHr_role(company.getHr().getHr_role());
+		hr.setHr_role("Admin");
 		hr.setRatingform(company.getHr().getRatingform());
 
 		company.setCompany_name(company.getCompany_name());
@@ -173,9 +168,6 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 	}
 
-	
-	
-	
 	////////////////////////////
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
@@ -221,16 +213,17 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, String hr_email, boolean approver,
+			boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
 
 		hr.setHr_name(hr_name);
+		hr.setHr_email(hr_email);
 		hr.setAdded_by(hrid);
 		session.save(hr);
 		if (approver == true && add_team == true) {
 			int a = hr.getHr_id();
-			System.out.println(a);
 			hr.setApprover(a);
 
 			hr.setHr_role("Admin");
@@ -330,7 +323,5 @@ public class Ccrservice {
 		}
 
 	}
-
-
 
 }
