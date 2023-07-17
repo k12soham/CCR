@@ -23,6 +23,10 @@ public class Candidate {
 	private String candidate_password;
 	private String candidate_phone;
 	private String candidate_dob;
+	private Integer candidate_otp;
+	private Integer candidate_token;
+
+	
 
 	@OneToMany(mappedBy = "candidate")
 	@JsonIgnore
@@ -39,7 +43,7 @@ public class Candidate {
 
 	public Candidate(Integer candidate_id, Long candidate_aadhar, String candidate_name, String candidate_email,
 			String candidate_password, String candidate_phone, String candidate_dob, List<RatingForm> ratingform,
-			List<Hr> likedHr) {
+			List<Hr> likedHr,Integer candidate_otp,Integer candidate_token) {
 		super();
 		this.candidate_id = candidate_id;
 		this.candidate_aadhar = candidate_aadhar;
@@ -50,6 +54,8 @@ public class Candidate {
 		this.candidate_dob = candidate_dob;
 		this.ratingform = ratingform;
 		//this.likedHr = likedHr;
+		this.candidate_otp=candidate_otp;
+		this.candidate_token=candidate_token;
 	}
 
 	public Integer getCandidate_id() {
@@ -114,6 +120,20 @@ public class Candidate {
 
 	public void setRatingform(List<RatingForm> ratingform) {
 		this.ratingform = ratingform;
+	}
+	public Integer getCandidate_otp() {
+		return candidate_otp;
+	}
+
+	public void setCandidate_otp(Integer candidate_otp) {
+		this.candidate_otp = candidate_otp;
+	}
+	public Integer getCandidate_token() {
+		return candidate_token;
+	}
+
+	public void setCandidate_token(Integer candidate_token) {
+		this.candidate_token = candidate_token;
 	}
 
 //	public List<HrAdmin> getLikedHr() {
