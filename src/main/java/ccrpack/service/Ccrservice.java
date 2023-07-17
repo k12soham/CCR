@@ -50,8 +50,7 @@ public class Ccrservice {
 
 	@Autowired
 	CandidateRepo candidateRepo;
-	
-	
+
 	@Autowired
 	CcrRepo ccrRepo;
 
@@ -60,15 +59,19 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
+
 	
 
 	@Autowired
 	private JavaMailSender javaMailSender;
 	
+
+
+
 	@PersistenceContext
 	EntityManager entityManager;
 
-	public ResponseEntity<String> ccrLogin(CcrAdmin ccrAdmin) {
+	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -84,7 +87,8 @@ public class Ccrservice {
 
 			if (ccrAdmin != null) {
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("CCR Admin Login Sucessfully....");
+				return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
+
 			}
 		} catch (Exception e) {
 			session.close();
@@ -92,9 +96,8 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
 
-	public ResponseEntity<String> candlogin(Candidate candidate) {
+	public ResponseEntity<?> candlogin(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
 			CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -110,7 +113,8 @@ public class Ccrservice {
 
 			if (candidate != null) {
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("Candidate Login Sucessfully");
+				return new ResponseEntity<>(candidate, HttpStatus.OK);
+
 			}
 		} catch (Exception e) {
 			session.close();
@@ -118,7 +122,6 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
 
 	public ResponseEntity<String> registerCandidate(Candidate candidate) {
 		Session session = entityManager.unwrap(Session.class);
@@ -135,25 +138,25 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("Candidate Registered sucessfully");
 	}
 
-	
+	public ResponseEntity<?> hrlogin(Hr hr) {
 
-	public ResponseEntity<String> hrlogin(Hr hr2) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
+
 			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-
 			Root<Hr> root = cr.from(Hr.class);
 			cr.select(root).where(cb.equal(root.get("hr_email"), hr.getHr_email()),
 					cb.equal(root.get("hr_password"), hr.getHr_password()));
-
 			TypedQuery<Hr> query = session.createQuery(cr);
 
 			hr = query.getSingleResult();
 
 			if (hr != null) {
+
 				session.close();
-				return ResponseEntity.status(HttpStatus.OK).body("Hr Login Sucessfully");
+				return new ResponseEntity<>(hr, HttpStatus.OK);
+
 			}
 		} catch (Exception e) {
 			session.close();
@@ -161,8 +164,6 @@ public class Ccrservice {
 		}
 		return null;
 	}
-	
-	
 
 	public ResponseEntity<String> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
@@ -171,7 +172,7 @@ public class Ccrservice {
 		hr.setHr_phone(company.getHr().getHr_phone());
 		hr.setHr_email(company.getHr().getHr_email());
 		hr.setHr_password(company.getHr().getHr_password());
-		hr.setHr_role(company.getHr().getHr_role());
+		hr.setHr_role("Admin");
 		hr.setRatingform(company.getHr().getRatingform());
 
 		company.setCompany_name(company.getCompany_name());
@@ -185,9 +186,6 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 	}
 
-	
-	
-	
 	////////////////////////////
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
@@ -233,16 +231,17 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, String hr_email, boolean approver,
+			boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
 
 		hr.setHr_name(hr_name);
+		hr.setHr_email(hr_email);
 		hr.setAdded_by(hrid);
 		session.save(hr);
 		if (approver == true && add_team == true) {
 			int a = hr.getHr_id();
-			System.out.println(a);
 			hr.setApprover(a);
 
 			hr.setHr_role("Admin");
@@ -447,6 +446,7 @@ public class Ccrservice {
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
 		Root<Candidate> root = cr.from(Candidate.class);
+
 		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
 				cb.equal(root.get("candidate_password"), currentpass));
 		Query query = session.createQuery(cr);
@@ -466,7 +466,124 @@ public class Ccrservice {
 
 	}
 
+	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {
+		Session session = entityManager.unwrap(Session.class);
 
+		ratingForm.setQ1(ratingForm.isQ1());
+		boolean a1 = ratingForm.isQ1();
+
+		ratingForm.setQ2(ratingForm.isQ2());
+		boolean a2 = ratingForm.isQ2();
+
+		ratingForm.setQ3(ratingForm.isQ3());
+		boolean a3 = ratingForm.isQ3();
+
+		ratingForm.setQ4(ratingForm.isQ4());
+		boolean a4 = ratingForm.isQ4();
+
+		ratingForm.setQ5(ratingForm.isQ5());
+		boolean a5 = ratingForm.isQ5();
+
+		ratingForm.setQ6(ratingForm.isQ6());
+		boolean a6 = ratingForm.isQ6();
+
+		ratingForm.setQ7(ratingForm.isQ7());
+		boolean a7 = ratingForm.isQ7();
+
+		ratingForm.setQ8(ratingForm.isQ8());
+		boolean a8 = ratingForm.isQ8();
+
+		ratingForm.setQ9(ratingForm.isQ9());
+		boolean a9 = ratingForm.isQ9();
+
+		ratingForm.setQ10(ratingForm.isQ10());
+		boolean a10 = ratingForm.isQ10();
+
+		boolean answers[] = { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 };
+		int totalScore = 0;
+
+		for (int i = 0; i < answers.length; i++) {
+			if (answers[i] == true) {
+				double weightage = getWeightageByQuestion(i + 1);
+				totalScore += weightage;
+			} else {
+				continue;
+			}
+//			 = totalScore/questionCount;
+		}
+		ratingForm.setRating_total(totalScore);
+
+//		ratingForm.setAverageScore(averageScore);
+
+		ratingRepo.save(ratingForm);
+		session.close();
+		return ResponseEntity.status(HttpStatus.OK).body("Ans of 10 question saved");
+	}
+
+	private double getWeightageByQuestion(int i) {
+		switch (i) {
+		case 0:
+			return 5;
+		case 1:
+			return 5;
+
+		case 2:
+			return 5;
+
+		case 3:
+			return 5;
+
+		case 4:
+			return 5;
+
+		case 5:
+			return 5;
+
+		case 6:
+			return 5;
+
+		case 7:
+			return 5;
+
+		case 8:
+			return 5;
+
+		case 9:
+			return 5;
+
+		default:
+			return 0;
+		}
+	}
+
+//	public void calculateAndSaveRating(RatingForm request) {
+//    List<Boolean> answers = request.getAnswers();
+//    int[] weightages = {5, 3, 2, 4, 1, 2, 3, 4, 2, 5}; // Hardcoded weightages for 10 questions
+//
+//    if (answers.size() == weightages.length) {
+//        double totalWeightage = 0;
+//        double totalWeightedScore = 0;
+//
+//        for (int i = 0; i < answers.size(); i++) {
+//            boolean answer = answers.get(i);
+//            int weightage = weightages[i];
+//
+//            totalWeightage += weightage;
+//            if (answer) {
+//                totalWeightedScore += weightage;
+//            }
+//        }
+//
+//        double average = totalWeightedScore / totalWeightage;
+//
+
+//}
+//	}
+
+//	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {	
+//		ratingRepo.save(ratingForm);
+//		return ResponseEntity.status(HttpStatus.OK).body("Ans of 10 question saved");
+//	}
 
 
 	

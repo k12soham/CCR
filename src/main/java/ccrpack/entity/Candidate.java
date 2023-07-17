@@ -9,7 +9,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
 
 @Entity
 public class Candidate {
@@ -32,9 +35,11 @@ public class Candidate {
 	@JsonIgnore
 	private List<RatingForm> ratingform;
 
-	//@ManyToMany
-	//@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_admin_id"))
-	//List<HrAdmin> likedHr;
+
+//	@ManyToMany
+//	@JoinTable(name = "hr_cand", joinColumns = @JoinColumn(name = "candidate_id"), inverseJoinColumns = @JoinColumn(name = "hr_id"))
+//	List<Hr> likedHr;
+
 
 	public Candidate() {
 		super();
@@ -135,6 +140,7 @@ public class Candidate {
 	public void setCandidate_token(Integer candidate_token) {
 		this.candidate_token = candidate_token;
 	}
+
 
 //	public List<HrAdmin> getLikedHr() {
 //		return likedHr;
