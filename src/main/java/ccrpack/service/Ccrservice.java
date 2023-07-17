@@ -1,11 +1,17 @@
 package ccrpack.service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import ccrpack.entity.Candidate;
@@ -18,6 +24,8 @@ import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
@@ -26,6 +34,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class Ccrservice {
@@ -50,6 +59,14 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
+
+	
+
+	@Autowired
+	private JavaMailSender javaMailSender;
+	
+
+
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -300,7 +317,130 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> changePassword(int candidate_id, String currentpass, String newpass) {
+
+	//OTP Forgot password
+	public ResponseEntity<String> sendOtpByEmail(Candidate candidate) {
+
+		 Session session = entityManager.unwrap(Session.class);
+
+		 try {
+		        CriteriaBuilder cb = session.getCriteriaBuilder();
+		        CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+
+		        Root<Candidate> root = cr.from(Candidate.class);
+		      cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()));
+		
+		        Query query = session.createQuery(cr);
+
+		        Candidate retrievedCandidate = (Candidate) query.getSingleResult();
+		        System.out.println(retrievedCandidate.getCandidate_name());
+		
+		        if (retrievedCandidate != null) {
+		            int otp = generateOtp();
+		          //  int storingotp=candidate.getCandidate_otp();
+		            //System.out.println(storingotp);
+		            retrievedCandidate.setCandidate_otp(otp);
+		        
+		            candidateRepo.save(retrievedCandidate);
+		            String i=retrievedCandidate.getCandidate_email();
+		            System.out.println(i);
+		            sendOtpEmail(i, otp);
+		            session.close();
+		            return ResponseEntity.ok("OTP sent successfully");
+		            
+		        }
+		        }
+	        catch (Exception e) {
+		    	System.out.println(e);
+		        session.close();
+		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enter Correct Email....");
+		    }
+		return null;
+
+	}
+	private int generateOtp() {
+		int min = 10000;  
+		int max = 99999;  
+		int token = (int)(Math.random()*(max-min+1)+min);
+		
+	    return token;
+	}
+	private void sendOtpEmail(String email, int otp) throws UnsupportedEncodingException, MessagingException {
+		MimeMessage message = javaMailSender.createMimeMessage();              
+	    MimeMessageHelper helper = new MimeMessageHelper(message);
+	    helper.setFrom("yashporlekar8888@gmail.com", "CCR");
+	    helper.setTo(email);
+	    String subject = "Here's the link to reset your password";
+	    String content = "<p>Hello ,</p>"
+    	    + "<p>You have requested to reset your password.</p>"
+            + "<p>Here is your OTP: "+otp+"<br>"
+            + "<p>Ignore this email if you do remember your password, "
+            + "or you have not made the request.</p>";
+	    message.setSubject(subject);	     
+	    helper.setText(content, true);  	        
+	    javaMailSender.send(message);
+	}
+	public ResponseEntity<String> candchangepassforgot(Candidate candidate) {
+	    Session session = entityManager.unwrap(Session.class);
+	    try {
+	        CriteriaBuilder cb = session.getCriteriaBuilder();
+	        CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+	        Root<Candidate> root = cr.from(Candidate.class);
+	        cr.select(root).where(cb.equal(root.get("candidate_otp"), candidate.getCandidate_otp()));
+	        Query query = session.createQuery(cr);
+
+	        Candidate result = (Candidate) query.getSingleResult();
+	        // Perform password change logic here using the 'result' object
+
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.OK).body("You Have Entered Correct OTP....");
+	    } catch (NoResultException e) {
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please Enter Correct OTP....");
+	    }
+	}
+
+
+	public ResponseEntity<String> finalcandchangepass(String candidate_email, String newpass) {
+		
+		 Session session = entityManager.unwrap(Session.class);
+
+		
+		        CriteriaBuilder cb = session.getCriteriaBuilder();
+		        CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+
+		        Root<Candidate> root = cr.from(Candidate.class);
+		      cr.select(root).where(cb.equal(root.get("candidate_email"), candidate_email));
+		
+		        Query query = session.createQuery(cr);
+
+		        Candidate retrievedCandidate = (Candidate) query.getSingleResult();
+		        System.out.println(retrievedCandidate.getCandidate_name());
+		
+		        if (retrievedCandidate != null) {
+		        	 retrievedCandidate.setCandidate_password(newpass);
+		        	 candidateRepo.save(retrievedCandidate);
+		        	
+		 			session.close();
+
+		 			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+		        }
+		
+	
+//		    	System.out.println(e);
+//		        session.close();
+//		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enter Correct Email....");
+		 
+		return null;
+		
+	
+	}
+	
+	
+	
+	
+	
+	public ResponseEntity<String> candchangepass(int candidate_id, String currentpass, String newpass) {
 
 		Session session = entityManager.unwrap(Session.class);
 		CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -444,5 +584,9 @@ public class Ccrservice {
 //		ratingRepo.save(ratingForm);
 //		return ResponseEntity.status(HttpStatus.OK).body("Ans of 10 question saved");
 //	}
+
+
+	
+	
 
 }
