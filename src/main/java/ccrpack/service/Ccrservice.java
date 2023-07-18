@@ -148,184 +148,132 @@ public class Ccrservice {
 		return null;
 	}
 
-	public ResponseEntity<String> companyReg(Company company) {
+	public ResponseEntity<?> companyReg(Company company) {
 		Session session = entityManager.unwrap(Session.class);
+		try {
+			hr.setHr_name(company.getHr().getHr_name());
+			hr.setHr_phone(company.getHr().getHr_phone());
+			hr.setHr_email(company.getHr().getHr_email());
+			hr.setHr_password(company.getHr().getHr_password());
+			hr.setHr_role("Admin");
+			hr.setRatingform(company.getHr().getRatingform());
 
-		hr.setHr_name(company.getHr().getHr_name());
-		hr.setHr_phone(company.getHr().getHr_phone());
-		hr.setHr_email(company.getHr().getHr_email());
-		hr.setHr_password(company.getHr().getHr_password());
-		hr.setHr_role("Admin");
-		hr.setRatingform(company.getHr().getRatingform());
+			company.setCompany_name(company.getCompany_name());
+			company.setCompany_address(company.getCompany_address());
+			company.setCompany_phone(company.getCompany_phone());
+			company.setCompany_tan(company.getCompany_tan());
 
-		company.setCompany_name(company.getCompany_name());
-		company.setCompany_address(company.getCompany_address());
-		company.setCompany_phone(company.getCompany_phone());
-		company.setCompany_tan(company.getCompany_tan());
-
-		company.setHr(hr);
-		session.save(hr);
-		session.save(company);
-		return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
-	}
-
-	////////////////////////////
-	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
-		Session session = entityManager.unwrap(Session.class);
-
-		ratingForm.setQ1(q1);
-		ratingForm.setQ2(q2);
-		ratingForm.setRating_total(total);
-		candidate.setCandidate_id(candidate_id);
-		hr.setHr_id(rec_id);
-		ratingForm.setCandidate(candidate);
-		ratingForm.setHr(hr);
-
-		hr = hrRepo.getById(rec_id);
-		int a = hr.getApprover();
-		hr = hrRepo.getById(a);
-		int b = hr.getHr_id();
-
-		ratingForm.setNew_request(true);
-		ratingForm.setApprover_id(b);
-
-		session.save(ratingForm);
-		hrRepo.save(hr);
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("Rating added");
+			company.setHr(hr);
+			session.save(hr);
+			session.save(company);
+			session.close();
+			return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
 
 	}
 
-	public List<RatingForm> Getrequest(int rec_id) {
-		Session session = entityManager.unwrap(Session.class);
-
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-
-		CriteriaQuery<RatingForm> cr = cb.createQuery(RatingForm.class);
-		Root<RatingForm> root = cr.from(RatingForm.class);
-
-		cr.select(root).where((cb.equal(root.get("new_request"), true)), ((cb.equal(root.get("approver_id"), rec_id))));
-
-		Query query = session.createQuery(cr);
-		List<RatingForm> results = query.getResultList();
-
-		session.close();
-		return results;
-
-	}
+	/*
+	 * public ResponseEntity<?> AdminAddrecruiter(Hr hr) { Session session =
+	 * entityManager.unwrap(Session.class);
+	 * 
+	 * hr.setHr_name(hr.getHr_name()); 
+	 * hr.setHr_email(hr.getHr_email());
+	 * hr.setHr_password("1234"); 
+	 * hr.setAdded_by(hr.getHr_id());
+	 * 
+	 * 
+	 * 
+	 * session.save(hr);
+	 * 
+	 * if (==true && ==true) { int a = hr.getHr_id(); hr.setApprover(a);
+	 * 
+	 * hr.setHr_role("Admin"); } else if (hr.getApprover().equals(false) &&
+	 * hr.getAdded_by().equals(true)) { hr.setApprover(hr.getHr_id());
+	 * hr.setHr_role("TeamLead"); } else { hr.setApprover(hr.getHr_id());
+	 * hr.setHr_role("Rec"); }
+	 * 
+	 * hrRepo.save(hr);
+	 * 
+	 * session.close(); return
+	 * ResponseEntity.status(HttpStatus.CREATED).body("Admin saved"); }
+	 */
 
 	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, String hr_email, boolean approver,
 			boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
+		try {
+			hr.setHr_name(hr_name);
+			hr.setHr_email(hr_email);
+			hr.setAdded_by(hrid);
+			hr.setHr_password("1234");
+			session.save(hr);
+			if (approver == true && add_team == true) {
+				int a = hr.getHr_id();
+				hr.setApprover(a);
 
-		hr.setHr_name(hr_name);
-		hr.setHr_email(hr_email);
-		hr.setAdded_by(hrid);
-		session.save(hr);
-		if (approver == true && add_team == true) {
-			int a = hr.getHr_id();
-			hr.setApprover(a);
+				hr.setHr_role("Admin");
+			} else if (approver == false && add_team == true) {
+				hr.setApprover(hrid);
+				hr.setHr_role("TeamLead");
+			} else {
+				hr.setApprover(hrid);
+				hr.setHr_role("Rec");
+			}
 
-			hr.setHr_role("Admin");
-		} else if (approver == false && add_team == true) {
-			hr.setApprover(hrid);
-			hr.setHr_role("TeamLead");
-		} else {
-			hr.setApprover(hrid);
-			hr.setHr_role("Rec");
+			hrRepo.save(hr);
+
+			session.close();
+			return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
 		}
-
-		hrRepo.save(hr);
-
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
 	}
 
 	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
-
-		hr.setHr_name(hr_name);
-		hr.setAdded_by(hrid);
-		session.save(hr);
-
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-
-		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-		Root<Hr> root = cr.from(Hr.class);
-		cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
-		Query query = session.createQuery(cr);
-		Hr z = (Hr) query.getSingleResult();
-		int b = z.getApprover();
-		System.out.println(b);
-
-		int a = 5;
-
-		if (approver == false && add_team == true) {
-			hr.setApprover(b);
-			hr.setHr_role("TeamLead");
-		} else {
-			hr.setApprover(b);
-			hr.setHr_role("Rec");
-		}
-
-		hrRepo.save(hr);
-
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
-
-	}
-
-	public ResponseEntity<String> ChangeApprover(Integer hrid, String hr_email) {
-		Session session = entityManager.unwrap(Session.class);
-
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-
-		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-		Root<Hr> root = cr.from(Hr.class);
-		cr.select(root).where((cb.equal(root.get("hr_email"), hr_email)));
-		Query query = session.createQuery(cr);
-		Hr z = (Hr) query.getSingleResult();
-		System.out.println(z);
-		if (z == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
-
-		} else {
-
-			z.setApprover(hrid);
-			hrRepo.save(z);
-			return ResponseEntity.status(HttpStatus.CREATED).body("Approver changed");
-
-		}
-
-	}
-
-	public ResponseEntity<String> changePassword(int candidate_id, String currentpass, String newpass) {
-
-		Session session = entityManager.unwrap(Session.class);
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		Root<Candidate> root = cr.from(Candidate.class);
-
-		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
-				cb.equal(root.get("candidate_password"), currentpass));
-		Query query = session.createQuery(cr);
-		Candidate results = null;
 		try {
-			results = (Candidate) query.getSingleResult();
-			candidate = candidateRepo.getById(candidate_id);
-			candidate.setCandidate_password(newpass);
-			candidateRepo.save(candidate);
-			session.close();
+			hr.setHr_name(hr_name);
+			hr.setAdded_by(hrid);
+			hr.setHr_password("1234");
+			session.save(hr);
 
-			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
-		} catch (NoResultException e) {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+
+			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+			Root<Hr> root = cr.from(Hr.class);
+			cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
+			Query query = session.createQuery(cr);
+			Hr z = (Hr) query.getSingleResult();
+			int b = z.getApprover();
+			System.out.println(b);
+
+			int a = 5;
+
+			if (approver == false && add_team == true) {
+				hr.setApprover(b);
+				hr.setHr_role("TeamLead");
+			} else {
+				hr.setApprover(b);
+				hr.setHr_role("Rec");
+			}
+
+			hrRepo.save(hr);
+
 			session.close();
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+			return ResponseEntity.status(HttpStatus.CREATED).body("TeamLead saved");
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
 		}
 
 	}
-
+	
+	
 	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {
 		Session session = entityManager.unwrap(Session.class);
 
@@ -415,6 +363,103 @@ public class Ccrservice {
 			return 0;
 		}
 	}
+
+	////////////////////////////
+	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
+		Session session = entityManager.unwrap(Session.class);
+
+		ratingForm.setQ1(q1);
+		ratingForm.setQ2(q2);
+		ratingForm.setRating_total(total);
+		candidate.setCandidate_id(candidate_id);
+		hr.setHr_id(rec_id);
+		ratingForm.setCandidate(candidate);
+		ratingForm.setHr(hr);
+
+		hr = hrRepo.getById(rec_id);
+		int a = hr.getApprover();
+		hr = hrRepo.getById(a);
+		int b = hr.getHr_id();
+
+		ratingForm.setNew_request(true);
+		ratingForm.setApprover_id(b);
+
+		session.save(ratingForm);
+		hrRepo.save(hr);
+		session.close();
+		return ResponseEntity.status(HttpStatus.CREATED).body("Rating added");
+
+	}
+
+	public List<RatingForm> Getrequest(int rec_id) {
+		Session session = entityManager.unwrap(Session.class);
+
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+
+		CriteriaQuery<RatingForm> cr = cb.createQuery(RatingForm.class);
+		Root<RatingForm> root = cr.from(RatingForm.class);
+
+		cr.select(root).where((cb.equal(root.get("new_request"), true)), ((cb.equal(root.get("approver_id"), rec_id))));
+
+		Query query = session.createQuery(cr);
+		List<RatingForm> results = query.getResultList();
+
+		session.close();
+		return results;
+
+	}
+
+	public ResponseEntity<String> ChangeApprover(Integer hrid, String hr_email) {
+		Session session = entityManager.unwrap(Session.class);
+
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+
+		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+		Root<Hr> root = cr.from(Hr.class);
+		cr.select(root).where((cb.equal(root.get("hr_email"), hr_email)));
+		Query query = session.createQuery(cr);
+		Hr z = (Hr) query.getSingleResult();
+		System.out.println(z);
+		if (z == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
+
+		} else {
+
+			z.setApprover(hrid);
+			hrRepo.save(z);
+			return ResponseEntity.status(HttpStatus.CREATED).body("Approver changed");
+
+		}
+
+	}
+
+	public ResponseEntity<String> changePassword(int candidate_id, String currentpass, String newpass) {
+
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
+
+		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
+				cb.equal(root.get("candidate_password"), currentpass));
+		Query query = session.createQuery(cr);
+		Candidate results = null;
+		try {
+			results = (Candidate) query.getSingleResult();
+			candidate = candidateRepo.getById(candidate_id);
+			candidate.setCandidate_password(newpass);
+			candidateRepo.save(candidate);
+			session.close();
+
+			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+		} catch (NoResultException e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+		}
+
+	}
+
+	
 
 //	public void calculateAndSaveRating(RatingForm request) {
 //    List<Boolean> answers = request.getAnswers();

@@ -3,7 +3,6 @@ package ccrpack.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +25,7 @@ import ccrpack.service.Ccrservice;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-@CrossOrigin(origins="http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
 	@Autowired
@@ -69,30 +68,58 @@ public class Ccrcontroller {
 	public ResponseEntity<String> registerCandidate(@RequestBody Candidate candidate) {
 		return ccrservice.registerCandidate(candidate);
 	}
-	
-	// HR Login
-		@PostMapping(value = "/hrlogin")
-		public ResponseEntity<?> hrlogin(@RequestBody Hr hr) {
-			return ccrservice.hrlogin(hr);
-		}
 
-	
-	//Company & HR Registration
+	// HR Login
+	@PostMapping(value = "/hrlogin")
+	public ResponseEntity<?> hrlogin(@RequestBody Hr hr) {
+		return ccrservice.hrlogin(hr);
+	}
+
+	// Company & HR Registration
 	@PostMapping(value = "/addcomapny")
-	public ResponseEntity<String> companyReg(@RequestBody Company company) {
+	public ResponseEntity<?> companyReg(@RequestBody Company company) {
 
 		return ccrservice.companyReg(company);
 
 	}
 
-	//rating form data save for yes no questions and calculate total score 
+	// Add recruiter from Admin
+	/*
+	 * @PostMapping(value = "/Adminaddrecruiter") public ResponseEntity<?>
+	 * AdminAddrecruiter(@RequestBody Hr hr) {
+	 * 
+	 * return ccrservice.AdminAddrecruiter(hr);
+	 * 
+	 * }
+	 */
+	
+	
+	// Add recruiter from Admin
+	@PostMapping(value = "/Adminaddrecruiter")
+	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+			@RequestParam String hr_email, @RequestParam boolean approver, @RequestParam boolean add_team) {
+
+		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
+
+	}
+	
+	
+	// Add recruiter from TeamLead
+	@PostMapping(value = "/TLaddrecruiter")
+	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+			@RequestParam boolean approver, @RequestParam boolean add_team) {
+
+		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
+
+	}
+
+	// rating form data save for yes no questions and calculate total score
 	@PostMapping(value = "/saveYesNo")
-	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm){
+	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
 
-	
-  //////////////////////////////////
+	//////////////////////////////////
 
 	@PutMapping(value = "/candchangepass")
 	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
@@ -112,22 +139,6 @@ public class Ccrcontroller {
 	public List<RatingForm> Getrequest(@RequestParam int rec_id) {
 
 		return ccrservice.Getrequest(rec_id);
-
-	}
-
-	@PostMapping(value = "/Adminaddrecruiter")
-	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,@RequestParam String hr_email,
-			@RequestParam boolean approver, @RequestParam boolean add_team) {
-
-		return ccrservice.AdminAddrecruiter(hrid, hr_name,hr_email, approver, add_team);
-
-	}
-
-	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
-			@RequestParam boolean approver, @RequestParam boolean add_team) {
-
-		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
 
 	}
 
