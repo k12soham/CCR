@@ -107,14 +107,12 @@ public class Ccrcontroller {
 		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
 
 	}
-
 	// Add recruiter from TeamLead
 	@PostMapping(value = "/TLaddrecruiter")
 	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
-
 	}
 
 	// rating form data save for yes no questions and calculate total score
