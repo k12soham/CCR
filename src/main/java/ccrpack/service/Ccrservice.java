@@ -1,12 +1,15 @@
 package ccrpack.service;
 
 
-
 import java.util.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
 
+
+import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.net.http.HttpResponse;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -520,8 +523,7 @@ public class Ccrservice {
 	        ratingRepo.save(ratingForm);
 	        return ResponseEntity.ok("Answers for 10 questions saved");
 	}
-	
-	////////////////////////////
+
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
 
