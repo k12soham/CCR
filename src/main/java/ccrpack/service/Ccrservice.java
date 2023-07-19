@@ -379,12 +379,14 @@ public class Ccrservice {
 			Candidate result = (Candidate) query.getSingleResult();
 			// Perform password change logic here using the 'result' object
 
-			session.close();
-			return ResponseEntity.status(HttpStatus.OK).body("You Have Entered Correct OTP....");
-		} catch (NoResultException e) {
-			session.close();
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please Enter Correct OTP....");
-		}
+
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.OK).body("You Have Entered Correct OTP....");
+	    } catch (Exception e) {
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please Enter Correct OTP....");
+	    }
+
 	}
 
 	public ResponseEntity<String> finalcandchangepass(String candidate_email, String newpass) {
@@ -441,6 +443,53 @@ public class Ccrservice {
 		 	return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
 		 }
 	}
+	
+	public ResponseEntity<?> ccrlogin(CcrAdmin ccradmin) {
+	    Session session = entityManager.unwrap(Session.class);
+	    try {
+	        CriteriaBuilder cb = session.getCriteriaBuilder();
+	        CriteriaQuery<CcrAdmin> cr = cb.createQuery(CcrAdmin.class);
+	        Root<CcrAdmin> root = cr.from(CcrAdmin.class);
+	        cr.select(root)
+	                .where(cb.equal(root.get("ccr_email"), ccradmin.getCcr_email()),
+	                        cb.equal(root.get("ccr_password"), ccradmin.getCcr_password()));
+	        TypedQuery<CcrAdmin> query = session.createQuery(cr);
+
+	        ccrAdmin = query.getSingleResult();
+
+	        if (ccrAdmin != null) {
+	            session.close();
+//
+//	            
+//	            if (ccrAdmin.getCcr_role().equals("super")) {
+//	                System.out.println("Welcome to Super Admin Dashboard");
+//	            } else if (ccrAdmin.getCcr_role().equals("ccr")) {
+//	                System.out.println("Welcome to CCR Admin Dashboard");
+//	            }
+
+	            return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
+	        }
+	    } catch (Exception e) {
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
+	    }
+	    return null;
+	}
+	
+	
+	public ResponseEntity<String> addccradmin(CcrAdmin ccradmin) {
+	
+		Session session = entityManager.unwrap(Session.class);
+
+		ccradmin.setCcr_name(ccradmin.getCcr_name());
+		ccradmin.setCcr_email(ccradmin.getCcr_email());
+		ccradmin.setCcr_password("Welcome@123");
+		ccradmin.setCcr_phone(ccradmin.getCcr_phone());
+		ccradmin.setCcr_role("ccr");
+		session.save(ccradmin);
+		return ResponseEntity.status(HttpStatus.CREATED).body("New CCR Admin Added Sucessfully....");
+	}
+
 
 	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {
 		Session session = entityManager.unwrap(Session.class);
@@ -532,6 +581,7 @@ public class Ccrservice {
 		}
 	}
 
+
 	////////////////////////////
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
 		Session session = entityManager.unwrap(Session.class);
@@ -602,6 +652,7 @@ public class Ccrservice {
 		}
 
 	}
+
 
 //	public void calculateAndSaveRating(RatingForm request) {
 //    List<Boolean> answers = request.getAnswers();

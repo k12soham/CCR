@@ -52,7 +52,7 @@ public class Ccrcontroller {
 	Company cm = new Company();
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
-	CcrAdmin cadmin=new CcrAdmin();
+	CcrAdmin cadmin = new CcrAdmin();
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -98,8 +98,7 @@ public class Ccrcontroller {
 	 * 
 	 * }
 	 */
-	
-	
+
 	// Add recruiter from Admin
 	@PostMapping(value = "/Adminaddrecruiter")
 	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
@@ -108,8 +107,7 @@ public class Ccrcontroller {
 		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
 
 	}
-	
-	
+
 	// Add recruiter from TeamLead
 	@PostMapping(value = "/TLaddrecruiter")
 	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
@@ -124,9 +122,6 @@ public class Ccrcontroller {
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
-
-
-
 
 	@PostMapping(value = "/rating")
 	public ResponseEntity<String> Rating(@RequestParam Boolean q1, @RequestParam Boolean q2, @RequestParam int total,
@@ -149,35 +144,49 @@ public class Ccrcontroller {
 		return ccrservice.ChangeApprover(hrid, hr_email);
 
 	}
-	
-	
-	// Forgot password API 
 
-	 @PostMapping(value = "/forgot-password")
-	    public ResponseEntity<String> sendOtpByEmail(@RequestBody Candidate candidate) throws UnsupportedEncodingException, MessagingException {
-	        return ccrservice.sendOtpByEmail(candidate);
-	    }
-	 @PostMapping(value = "/candchangepassforgot")
-		public ResponseEntity<String> candchangepassforgot(@RequestBody Candidate candidate) {
-			return ccrservice.candchangepassforgot(candidate);
-		}
-		@PutMapping(value = "/finalcandchangepass")
-		public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,@RequestParam String newpass) {
-			return ccrservice.finalcandchangepass(candidate_email,newpass);
-		}
+	// Forgot password API
 
+	@PostMapping(value = "/forgot-password")
+	public ResponseEntity<String> sendOtpByEmail(@RequestBody Candidate candidate)
+			throws UnsupportedEncodingException, MessagingException {
+		return ccrservice.sendOtpByEmail(candidate);
+	}
 
+	// OTP Validation
+	@PostMapping(value = "/candchangepassforgot")
+	public ResponseEntity<String> candchangepassforgot(@RequestBody Candidate candidate) {
+		return ccrservice.candchangepassforgot(candidate);
+	}
 
+	// Change password (Using otp)
+	@PutMapping(value = "/finalcandchangepass")
+	public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,
+			@RequestParam String newpass) {
+		return ccrservice.finalcandchangepass(candidate_email, newpass);
+	}
 
-		@PutMapping(value = "/candchangepass")
-		public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
-				@RequestParam String newpass) {
-			return ccrservice.candchangepass(candidate_id, currentpass, newpass);
-		}
-		
-	
-
+	// Change password (from update account)
+	@PutMapping(value = "/candchangepass")
+	public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
 	}
 	
 	
+	//CCR Admin & Super Admin Login
+	@PostMapping(value = "/ccrlogin")
+	public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
+		return ccrservice.ccrlogin(ccradmin);
+	}
+	
+	
+	//Add CCR Admin from Super Admin dashboard
+	@PostMapping(value = "/addccradmin")
+	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
+		return ccrservice.addccradmin(ccradmin);
+
+	}
+
+}
