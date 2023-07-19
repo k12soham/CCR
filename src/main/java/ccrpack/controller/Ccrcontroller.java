@@ -1,9 +1,8 @@
 package ccrpack.controller;
 
-import java.util.List;
-
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,10 +22,11 @@ import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
 import ccrpack.service.Ccrservice;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-@CrossOrigin(origins="http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
 	@Autowired
@@ -48,6 +48,7 @@ public class Ccrcontroller {
 	Company cm = new Company();
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
+	CcrAdmin cadmin = new CcrAdmin();
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -69,34 +70,54 @@ public class Ccrcontroller {
 	public ResponseEntity<String> registerCandidate(@RequestBody Candidate candidate) {
 		return ccrservice.registerCandidate(candidate);
 	}
-	
-	// HR Login
-		@PostMapping(value = "/hrlogin")
-		public ResponseEntity<?> hrlogin(@RequestBody Hr hr) {
-			return ccrservice.hrlogin(hr);
-		}
 
-	
-	//Company & HR Registration
+	// HR Login
+	@PostMapping(value = "/hrlogin")
+	public ResponseEntity<?> hrlogin(@RequestBody Hr hr) {
+		return ccrservice.hrlogin(hr);
+	}
+
+	// Company & HR Registration
 	@PostMapping(value = "/addcomapny")
-	public ResponseEntity<String> companyReg(@RequestBody Company company) {
+	public ResponseEntity<?> companyReg(@RequestBody Company company) {
 
 		return ccrservice.companyReg(company);
 
 	}
 
-	//rating form data save for yes no questions and calculate total score 
-	@PostMapping(value = "/saveYesNo")
-	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm){
-		return ccrservice.saveYesNoAns(ratingForm);
-	}
-	
-  //////////////////////////////////
+	// Add recruiter from Admin
+	/*
+	 * @PostMapping(value = "/Adminaddrecruiter") public ResponseEntity<?>
+	 * AdminAddrecruiter(@RequestBody Hr hr) {
+	 * 
+	 * return ccrservice.AdminAddrecruiter(hr);
+	 * 
+	 * }
+	 */
 
-	@PutMapping(value = "/candchangepass")
-	public ResponseEntity<String> changePassword(@RequestParam int candidate_id, @RequestParam String currentpass,
-			@RequestParam String newpass) {
-		return ccrservice.changePassword(candidate_id, currentpass, newpass);
+	// Add recruiter from Admin
+	@PostMapping(value = "/Adminaddrecruiter")
+	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+			@RequestParam String hr_email, @RequestParam boolean approver, @RequestParam boolean add_team) {
+
+		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
+
+	}
+
+
+	// Add recruiter from TeamLead
+	@PostMapping(value = "/TLaddrecruiter")
+	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+			@RequestParam boolean approver, @RequestParam boolean add_team) {
+
+		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
+
+	}
+
+	// rating form data save for yes no questions and calculate total score
+	@PostMapping(value = "/saveYesNo")
+	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
+		return ccrservice.saveYesNoAns(ratingForm);
 	}
 
 	@PostMapping(value = "/rating")
@@ -114,26 +135,54 @@ public class Ccrcontroller {
 
 	}
 
-	@PostMapping(value = "/Adminaddrecruiter")
-	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,@RequestParam String hr_email,
-			@RequestParam boolean approver, @RequestParam boolean add_team) {
-
-		return ccrservice.AdminAddrecruiter(hrid, hr_name,hr_email, approver, add_team);
-
-	}
-
-	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
-			@RequestParam boolean approver, @RequestParam boolean add_team) {
-
-		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
-
-	}
-
 	@PostMapping(value = "/changeapprover")
 	public ResponseEntity<String> ChangeApprover(@RequestParam Integer hrid, @RequestParam String hr_email) {
 
 		return ccrservice.ChangeApprover(hrid, hr_email);
+
+	}
+
+	// Forgot password API
+
+	@PostMapping(value = "/forgot-password")
+	public ResponseEntity<String> sendOtpByEmail(@RequestBody Candidate candidate)
+			throws UnsupportedEncodingException, MessagingException {
+		return ccrservice.sendOtpByEmail(candidate);
+	}
+
+	// OTP Validation
+	@PostMapping(value = "/candchangepassforgot")
+	public ResponseEntity<String> candchangepassforgot(@RequestBody Candidate candidate) {
+		return ccrservice.candchangepassforgot(candidate);
+	}
+
+	// Change password (Using otp)
+	@PutMapping(value = "/finalcandchangepass")
+	public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,
+			@RequestParam String newpass) {
+		return ccrservice.finalcandchangepass(candidate_email, newpass);
+	}
+
+	// Change password (from update account)
+	@PutMapping(value = "/candchangepass")
+	public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
+	}
+	
+	
+	//CCR Admin & Super Admin Login
+	@PostMapping(value = "/ccrlogin")
+	public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
+		return ccrservice.ccrlogin(ccradmin);
+	}
+	
+	
+	//Add CCR Admin from Super Admin dashboard
+	@PostMapping(value = "/addccradmin")
+	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
+
+		return ccrservice.addccradmin(ccradmin);
 
 	}
 
