@@ -6,4 +6,5 @@ import ccrpack.entity.Candidate;
 
 public interface CandidateRepo extends JpaRepository<Candidate, Integer> {
 
+
 }
