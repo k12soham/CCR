@@ -24,10 +24,6 @@ public class Company {
 	@OneToOne(mappedBy = "company")
 	private Hr hr;
 
-	@OneToMany(mappedBy = "company")
-	@JsonIgnore
-	private List<RatingForm> ratingform;
-
 	public Company() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -42,7 +38,6 @@ public class Company {
 		this.company_phone = company_phone;
 		this.company_tan = company_tan;
 		this.hr = hr;
-		this.ratingform = ratingform;
 	}
 
 	public Integer getCompany_id() {
@@ -91,14 +86,6 @@ public class Company {
 
 	public void setHr(Hr hr) {
 		this.hr = hr;
-	}
-
-	public List<RatingForm> getRatingform() {
-		return ratingform;
-	}
-
-	public void setRatingform(List<RatingForm> ratingform) {
-		this.ratingform = ratingform;
 	}
 
 }

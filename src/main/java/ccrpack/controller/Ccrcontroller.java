@@ -90,7 +90,6 @@ public class Ccrcontroller {
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm){
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
-
 	
   //////////////////////////////////
 
