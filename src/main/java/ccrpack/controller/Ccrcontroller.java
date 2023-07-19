@@ -153,14 +153,20 @@ public class Ccrcontroller {
 		public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,@RequestParam String newpass) {
 			return ccrservice.finalcandchangepass(candidate_email,newpass);
 		}
-
-
-
-
 		@PutMapping(value = "/candchangepass")
 		public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
 				@RequestParam String newpass) {
 			return ccrservice.candchangepass(candidate_id, currentpass, newpass);
+		}
+		@PostMapping(value = "/ccrlogin")
+		public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
+			return ccrservice.ccrlogin(ccradmin);
+		}
+		@PostMapping(value = "/addccradmin")
+		public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
+
+			return ccrservice.addccradmin(ccradmin);
+
 		}
 		
 	
