@@ -37,9 +37,9 @@ public class RatingForm {
 
 	private Integer approver_id;
 
-	@ManyToOne
-	@JoinColumn(name = "company_tan")
-	private Company company;
+//	@ManyToOne
+//	@JoinColumn(name = "company_tan")
+//	private Company company;
 
 	public RatingForm() {
 		super();
@@ -67,7 +67,6 @@ public class RatingForm {
 		this.candidate = candidate;
 		this.hr = hr;
 		this.approver_id = approver_id;
-		this.company = company;
 	}
 
 	public Integer getRating_id() {
@@ -180,14 +179,6 @@ public class RatingForm {
 
 	public void setHr(Hr hr) {
 		this.hr = hr;
-	}
-
-	public Company getCompany() {
-		return company;
-	}
-
-	public void setCompany(Company company) {
-		this.company = company;
 	}
 
 	public boolean isApprove() {
