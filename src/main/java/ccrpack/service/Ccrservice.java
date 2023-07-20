@@ -389,34 +389,34 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> finalcandchangepass(String candidate_email, String newpass) {
+	public ResponseEntity<String> finalcandchangepass(Candidate candidate) {
 
 		Session session = entityManager.unwrap(Session.class);
-
+		try {
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
 
 		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_email"), candidate_email));
+		cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()));
 
 		Query query = session.createQuery(cr);
 
 		Candidate retrievedCandidate = (Candidate) query.getSingleResult();
-		System.out.println(retrievedCandidate.getCandidate_name());
 
 		if (retrievedCandidate != null) {
-			retrievedCandidate.setCandidate_password(newpass);
+			retrievedCandidate.setCandidate_password(candidate.getCandidate_password());
 			candidateRepo.save(retrievedCandidate);
 
 			session.close();
 
 			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
 		}
-
-//		    	System.out.println(e);
-//		        session.close();
-//		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enter Correct Email....");
-
+		
+	
+		} catch (Exception e) {
+	        session.close();
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+	    }
 		return null;
 
 	}
@@ -459,13 +459,6 @@ public class Ccrservice {
 
 	        if (ccrAdmin != null) {
 	            session.close();
-//
-//	            
-//	            if (ccrAdmin.getCcr_role().equals("super")) {
-//	                System.out.println("Welcome to Super Admin Dashboard");
-//	            } else if (ccrAdmin.getCcr_role().equals("ccr")) {
-//	                System.out.println("Welcome to CCR Admin Dashboard");
-//	            }
 
 	            return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
 	        }

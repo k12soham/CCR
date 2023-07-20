@@ -161,9 +161,8 @@ public class Ccrcontroller {
 
 	// Change password (Using otp)
 	@PutMapping(value = "/finalcandchangepass")
-	public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,
-			@RequestParam String newpass) {
-		return ccrservice.finalcandchangepass(candidate_email, newpass);
+	public ResponseEntity<String> finalcandchangepass(@RequestBody Candidate candidate) {
+		return ccrservice.finalcandchangepass(candidate);
 	}
 
 	// Change password (from update account)
