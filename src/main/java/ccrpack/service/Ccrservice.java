@@ -2,6 +2,10 @@ package ccrpack.service;
 
 import java.util.*;
 
+import javax.imageio.ImageIO;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
 
@@ -18,16 +22,19 @@ import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.OcrResult;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
+import ccrpack.repo.OcrResultRepository;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -40,6 +47,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
 
 @Service
 public class Ccrservice {
@@ -58,12 +67,25 @@ public class Ccrservice {
 
 	@Autowired
 	CcrRepo ccrRepo;
+	
+	@Autowired
+	OcrResultRepository ocrRepo;
+	
+	private ITesseract tesseract;
+	
+	
+
+	public Ccrservice() {
+		tesseract = new Tesseract();
+		tesseract.setDatapath("src/main/resources/eng.traineddata");
+	}
 
 	Hr hr = new Hr();
 	Company company = new Company();
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
+	OcrResult ocrResult = new OcrResult();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
@@ -618,4 +640,20 @@ public class Ccrservice {
 		}
 
 	}
+	
+	public OcrResult saveImage(OcrResult file){
+		return ocrRepo.save(file);
+	}
+	
+	
+	public String extractTextFromImage(byte[] imageBytes) {
+		try {
+			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 }
