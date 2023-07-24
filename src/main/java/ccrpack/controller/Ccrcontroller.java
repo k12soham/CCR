@@ -1,21 +1,35 @@
 package ccrpack.controller;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -25,55 +39,52 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
-import ccrpack.repo.CcrRepo;
-import ccrpack.repo.CompanyRepo;
-import ccrpack.repo.HrRepo;
-import ccrpack.repo.RatingRepo;
 import ccrpack.service.Ccrservice;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.multipart.MultipartFile;
+
 //new
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
 
 
+
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
-	@Autowired
-	CompanyRepo comp;
-
-	@Autowired
-	HrRepo hri;
-
-	@Autowired
-	RatingRepo ri;
-
-	@Autowired
-	CandidateRepo candinter;
 
 	@Autowired
 	Ccrservice ccrservice;
+	
+	@Autowired
+	CandidateRepo candinter;
+	
+
+
 
 	Hr hra = new Hr();
 	Company cm = new Company();
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
 	CcrAdmin cadmin = new CcrAdmin();
+	
+
+	Question q = new Question();
+	Answer a = new Answer();
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -134,18 +145,36 @@ public class Ccrcontroller {
 
 	// Add recruiter from TeamLead
 	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	public ResponseEntity<?> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
-
 	}
 
+	// add answers of candidate
+	@PostMapping("/answers")
+	public ResponseEntity<?> submitAnswers(@RequestParam int candidate_id, @RequestBody List<Answer> answers)
+			throws Exception {
+
+		return ccrservice.submitAnswers(candidate_id, answers);
+	}
+
+	
+	// find average score
+		@GetMapping("/averageScore")
+		public ResponseEntity<?> getCandidateAverageScore(@RequestBody Candidate candidate) {
+			return ccrservice.getCandidateAverageScore(candidate);
+			
+		}
+	
 	// rating form data save for yes no questions and calculate total score
 	@PostMapping(value = "/saveYesNo")
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
+	
+	
+	   
 
 	@PostMapping(value = "/rating")
 	public ResponseEntity<String> Rating(@RequestParam Boolean q1, @RequestParam Boolean q2, @RequestParam int total,
@@ -185,9 +214,8 @@ public class Ccrcontroller {
 
 	// Change password (Using otp)
 	@PutMapping(value = "/finalcandchangepass")
-	public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,
-			@RequestParam String newpass) {
-		return ccrservice.finalcandchangepass(candidate_email, newpass);
+	public ResponseEntity<String> finalcandchangepass(@RequestBody Candidate candidate) {
+		return ccrservice.finalcandchangepass(candidate);
 	}
 
 	// Change password (from update account)
@@ -196,16 +224,14 @@ public class Ccrcontroller {
 			@RequestParam String newpass) {
 		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
 	}
-	
-	
-	//CCR Admin & Super Admin Login
+
+	// CCR Admin & Super Admin Login
 	@PostMapping(value = "/ccrlogin")
 	public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
 		return ccrservice.ccrlogin(ccradmin);
 	}
-	
-	
-	//Add CCR Admin from Super Admin dashboard
+
+	// Add CCR Admin from Super Admin dashboard
 	@PostMapping(value = "/addccradmin")
 	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
@@ -213,6 +239,7 @@ public class Ccrcontroller {
 
 	}
 	
+
 	//Backround verfication candidate Aadhar
 
 //	 @PostMapping("/upload")
@@ -314,4 +341,9 @@ public class Ccrcontroller {
 	}
 
 	
+
+	
+
+
+
 }

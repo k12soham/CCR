@@ -25,6 +25,18 @@ public class RatingForm {
 	private Integer rating_total;
 	private boolean approve;
 	private boolean new_request;
+	
+	
+//	private int category1Score;
+//	private int category2Score;
+//	private int category3Score;
+//	private int category4Score;
+//	private int category5Score;
+//	private String category1;
+//	private String category2;
+//	private String category3;
+//	private String category4;
+//	private String category5;
 
 
 	@ManyToOne
@@ -37,9 +49,9 @@ public class RatingForm {
 
 	private Integer approver_id;
 
-	@ManyToOne
-	@JoinColumn(name = "company_tan")
-	private Company company;
+//	@ManyToOne
+//	@JoinColumn(name = "company_tan")
+//	private Company company;
 
 	public RatingForm() {
 		super();
@@ -67,7 +79,6 @@ public class RatingForm {
 		this.candidate = candidate;
 		this.hr = hr;
 		this.approver_id = approver_id;
-		this.company = company;
 	}
 
 	public Integer getRating_id() {
@@ -182,14 +193,6 @@ public class RatingForm {
 		this.hr = hr;
 	}
 
-	public Company getCompany() {
-		return company;
-	}
-
-	public void setCompany(Company company) {
-		this.company = company;
-	}
-
 	public boolean isApprove() {
 		return approve;
 	}
@@ -213,4 +216,87 @@ public class RatingForm {
 	public void setApprover_id(Integer approver_id) {
 		this.approver_id = approver_id;
 	}
+
+//	public int getCategory1Score() {
+//		return category1Score;
+//	}
+//
+//	public void setCategory1Score(int category1Score) {
+//		this.category1Score = category1Score;
+//	}
+//
+//	public int getCategory2Score() {
+//		return category2Score;
+//	}
+//
+//	public void setCategory2Score(int category2Score) {
+//		this.category2Score = category2Score;
+//	}
+//
+//	public int getCategory3Score() {
+//		return category3Score;
+//	}
+//
+//	public void setCategory3Score(int category3Score) {
+//		this.category3Score = category3Score;
+//	}
+//
+//	public int getCategory4Score() {
+//		return category4Score;
+//	}
+//
+//	public void setCategory4Score(int category4Score) {
+//		this.category4Score = category4Score;
+//	}
+//
+//	public int getCategory5Score() {
+//		return category5Score;
+//	}
+//
+//	public void setCategory5Score(int category5Score) {
+//		this.category5Score = category5Score;
+//	}
+//
+//	public String getCategory1() {
+//		return category1;
+//	}
+//
+//	public void setCategory1(String category1) {
+//		this.category1 = category1;
+//	}
+//
+//	public String getCategory2() {
+//		return category2;
+//	}
+//
+//	public void setCategory2(String category2) {
+//		this.category2 = category2;
+//	}
+//
+//	public String getCategory3() {
+//		return category3;
+//	}
+//
+//	public void setCategory3(String category3) {
+//		this.category3 = category3;
+//	}
+//
+//	public String getCategory4() {
+//		return category4;
+//	}
+//
+//	public void setCategory4(String category4) {
+//		this.category4 = category4;
+//	}
+//
+//	public String getCategory5() {
+//		return category5;
+//	}
+//
+//	public void setCategory5(String category5) {
+//		this.category5 = category5;
+//	}
+//	
+	
+
 }
