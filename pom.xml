@@ -64,6 +64,20 @@
 </dependency>
 
 
+		<dependency>
+    <groupId>net.sourceforge.tess4j</groupId>
+    <artifactId>tess4j</artifactId>
+    <version>4.5.4</version>
+</dependency>
+
+<!-- PDFBox -->
+<dependency>
+    <groupId>org.apache.pdfbox</groupId>
+    <artifactId>pdfbox</artifactId>
+    <version>2.0.26</version>
+</dependency>
+
+
 <!-- Tesseract OCR -->
 <dependency>
     <groupId>net.sourceforge.tess4j</groupId>
@@ -77,7 +91,7 @@
     <artifactId>javacv-platform</artifactId>
     <version>1.5.6</version>
 </dependency>
-		
+
 	</dependencies>
 
 	<build>

@@ -3,6 +3,8 @@ package ccrpack.controller;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,10 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.Question;
+import ccrpack.entity.RatingForm;
 import ccrpack.entity.OcrResult;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
@@ -40,17 +45,6 @@ import jakarta.persistence.PersistenceContext;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
-	@Autowired
-	CompanyRepo comp;
-
-	@Autowired
-	HrRepo hri;
-
-	@Autowired
-	RatingRepo ri;
-
-	@Autowired
-	CandidateRepo candinter;
 
 	@Autowired
 	Ccrservice ccrservice;
@@ -64,6 +58,9 @@ public class Ccrcontroller {
 	Candidate cand = new Candidate();
 	CcrAdmin cadmin = new CcrAdmin();
 	OcrResult ocrResult = new OcrResult();
+
+	Question q = new Question();
+	Answer a = new Answer();
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -121,17 +118,36 @@ public class Ccrcontroller {
 
 	// Add recruiter from TeamLead
 	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	public ResponseEntity<?> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
 	}
 
+	// add answers of candidate
+	@PostMapping("/answers")
+	public ResponseEntity<?> submitAnswers(@RequestParam int candidate_id, @RequestBody List<Answer> answers)
+			throws Exception {
+
+		return ccrservice.submitAnswers(candidate_id, answers);
+	}
+
+	
+	// find average score
+		@GetMapping("/averageScore")
+		public ResponseEntity<?> getCandidateAverageScore(@RequestBody Candidate candidate) {
+			return ccrservice.getCandidateAverageScore(candidate);
+			
+		}
+	
 	// rating form data save for yes no questions and calculate total score
 	@PostMapping(value = "/saveYesNo")
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
+	
+	
+	   
 
 	@PostMapping(value = "/rating")
 	public ResponseEntity<String> Rating(@RequestParam Boolean q1, @RequestParam Boolean q2, @RequestParam int total,
@@ -171,9 +187,8 @@ public class Ccrcontroller {
 
 	// Change password (Using otp)
 	@PutMapping(value = "/finalcandchangepass")
-	public ResponseEntity<String> finalcandchangepass(@RequestParam String candidate_email,
-			@RequestParam String newpass) {
-		return ccrservice.finalcandchangepass(candidate_email, newpass);
+	public ResponseEntity<String> finalcandchangepass(@RequestBody Candidate candidate) {
+		return ccrservice.finalcandchangepass(candidate);
 	}
 
 	// Change password (from update account)
@@ -196,6 +211,8 @@ public class Ccrcontroller {
 		return ccrservice.addccradmin(ccradmin);
 
 	}
+	
+	
 
 	// save image/pdf/excel in database
 	@PostMapping(value = "/uploadFiles")
