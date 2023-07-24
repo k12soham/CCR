@@ -1,12 +1,9 @@
 package ccrpack.service;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +13,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.OcrResult;
 import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.AnswerRepo;
@@ -30,6 +27,7 @@ import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
+import ccrpack.repo.OcrResultRepository;
 import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
@@ -68,12 +66,25 @@ public class Ccrservice {
 
 	@Autowired
 	AnswerRepo answerRepo;
+	
+	@Autowired
+	OcrResultRepository ocrRepo;
+	
+	private ITesseract tesseract;
+	
+	
+
+	public Ccrservice() {
+		tesseract = new Tesseract();
+		tesseract.setDatapath("src/main/resources/eng.traineddata");
+	}
 
 	Hr hr = new Hr();
 	Company company = new Company();
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
+	OcrResult ocrResult = new OcrResult();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
@@ -322,7 +333,7 @@ public class Ccrservice {
 		}
 	}
 
-	public ResponseEntity<?> getCandidateTotalScore( Candidate candidate) {
+	public ResponseEntity<?> getCandidateAverageScore( Candidate candidate) {
 
 		try {
 			 candidate = candidateRepo.findById(candidate.getCandidate_id())
@@ -550,16 +561,56 @@ public class Ccrservice {
 
 		boolean[] answers = { ratingForm.isQ1(), ratingForm.isQ2(), ratingForm.isQ3(), ratingForm.isQ4(),
 				ratingForm.isQ5(), ratingForm.isQ6(), ratingForm.isQ7(), ratingForm.isQ8(), ratingForm.isQ9(),
-				ratingForm.isQ10() };
+				ratingForm.isQ10(), };
+//		String[] categories = { ratingForm.getCategory1(), ratingForm.getCategory2(), ratingForm.getCategory3(),
+//				ratingForm.getCategory4(), ratingForm.getCategory5() };
 
 		int[] weightages = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
+
 		int totalScore = 0;
-		for (int i = 0; i < answers.length; i++) {
-			if (answers[i]) {
-				totalScore += weightages[i];
-			}
-		}
+//		int category1Score = 0;
+//		int category2Score = 0;
+//		int category3Score = 0;
+//		int category4Score = 0;
+//		int category5Score = 0;
+
+	        for (int i = 0; i < answers.length; i++) {
+	            if (answers[i]) {
+	                totalScore += weightages[i];
+	            }
+	        }
+
+//		for (int i = 0; i < answers.length; i++) {
+//			if (answers[i]) {
+//				switch (i / 2) {
+//				case 0:
+//					category1Score += weightages[i];
+//					break;
+//				case 1:
+//					category2Score += weightages[i];
+//					break;
+//				case 2:
+//					category3Score += weightages[i];
+//					break;
+//				case 3:
+//					category4Score += weightages[i];
+//					break;
+//				case 4:
+//					category5Score += weightages[i];
+//					break;
+//				}
+//			}
+//		}
+
+//		totalScore = category1Score + category2Score + category3Score + category4Score + category5Score;
+//		ratingForm.setCategory1Score(category1Score);
+//		ratingForm.setCategory2Score(category2Score);
+//		ratingForm.setCategory3Score(category3Score);
+//		ratingForm.setCategory4Score(category4Score);
+//		ratingForm.setCategory5Score(category5Score);
+	        
 		ratingForm.setRating_total(totalScore);
+
 		ratingRepo.save(ratingForm);
 		return ResponseEntity.ok("Answers for 10 questions saved");
 	}
@@ -634,9 +685,19 @@ public class Ccrservice {
 
 	}
 	
+	public OcrResult saveImage(OcrResult file){
+		return ocrRepo.save(file);
+	}
 	
 	
-	
+	public String extractTextFromImage(byte[] imageBytes) {
+		try {
+			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
 	
 }
