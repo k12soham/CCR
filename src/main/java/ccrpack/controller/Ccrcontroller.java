@@ -201,15 +201,12 @@ public class Ccrcontroller {
 	@PostMapping(value = "/uploadFiles")
 	public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
 		try {
-
 			String uploadDir = "src/main/resources/static/images";
 			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 			Path uploadPath = Paths.get(uploadDir);
-
 			if (!Files.exists(uploadPath)) {
 				Files.createDirectories(uploadPath);
 			}
-
 			try (InputStream inputStream = file.getInputStream()) {
 				Files.copy(inputStream, uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
 			}
