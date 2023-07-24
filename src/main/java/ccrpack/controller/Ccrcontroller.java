@@ -1,7 +1,8 @@
 package ccrpack.controller;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,15 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
-import ccrpack.repo.CandidateRepo;
-import ccrpack.repo.CompanyRepo;
-import ccrpack.repo.HrRepo;
-import ccrpack.repo.RatingRepo;
 import ccrpack.service.Ccrservice;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
@@ -29,17 +28,6 @@ import jakarta.persistence.PersistenceContext;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
-	@Autowired
-	CompanyRepo comp;
-
-	@Autowired
-	HrRepo hri;
-
-	@Autowired
-	RatingRepo ri;
-
-	@Autowired
-	CandidateRepo candinter;
 
 	@Autowired
 	Ccrservice ccrservice;
@@ -49,6 +37,9 @@ public class Ccrcontroller {
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
 	CcrAdmin cadmin = new CcrAdmin();
+
+	Question q = new Question();
+	Answer a = new Answer();
 
 	@PersistenceContext
 	EntityManager entityManager;
@@ -106,17 +97,36 @@ public class Ccrcontroller {
 
 	// Add recruiter from TeamLead
 	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<String> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	public ResponseEntity<?> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
 	}
 
+	// add answers of candidate
+	@PostMapping("/answers")
+	public ResponseEntity<?> submitAnswers(@RequestParam int candidate_id, @RequestBody List<Answer> answers)
+			throws Exception {
+
+		return ccrservice.submitAnswers(candidate_id, answers);
+	}
+
+	
+	// find average score
+		@GetMapping("/averageScore")
+		public ResponseEntity<?> getCandidateTotalScore(@RequestBody Candidate candidate) {
+			return ccrservice.getCandidateTotalScore(candidate);
+			
+		}
+	
 	// rating form data save for yes no questions and calculate total score
 	@PostMapping(value = "/saveYesNo")
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
+	
+	
+	   
 
 	@PostMapping(value = "/rating")
 	public ResponseEntity<String> Rating(@RequestParam Boolean q1, @RequestParam Boolean q2, @RequestParam int total,
@@ -166,21 +176,21 @@ public class Ccrcontroller {
 			@RequestParam String newpass) {
 		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
 	}
-	
-	
-	//CCR Admin & Super Admin Login
+
+	// CCR Admin & Super Admin Login
 	@PostMapping(value = "/ccrlogin")
 	public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
 		return ccrservice.ccrlogin(ccradmin);
 	}
-	
-	
-	//Add CCR Admin from Super Admin dashboard
+
+	// Add CCR Admin from Super Admin dashboard
 	@PostMapping(value = "/addccradmin")
 	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
 		return ccrservice.addccradmin(ccradmin);
 
 	}
+	
+	
 
 }

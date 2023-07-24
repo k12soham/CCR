@@ -1,35 +1,36 @@
 package ccrpack.service;
 
-
-import java.util.*;
-
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.http.HttpResponse;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-
-import java.util.*;
-import java.io.UnsupportedEncodingException;
-import java.net.http.HttpResponse;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
+import ccrpack.repo.AnswerRepo;
 import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
+import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -41,7 +42,8 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
 
 @Service
 public class Ccrservice {
@@ -60,6 +62,12 @@ public class Ccrservice {
 
 	@Autowired
 	CcrRepo ccrRepo;
+
+	@Autowired
+	QuestionRepo questionRepo;
+
+	@Autowired
+	AnswerRepo answerRepo;
 
 	Hr hr = new Hr();
 	Company company = new Company();
@@ -253,35 +261,88 @@ public class Ccrservice {
 
 	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
+		try {
+			hr.setHr_name(hr_name);
+			hr.setAdded_by(hrid);
+			session.save(hr);
 
-		hr.setHr_name(hr_name);
-		hr.setAdded_by(hrid);
-		session.save(hr);
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 
-		CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+			Root<Hr> root = cr.from(Hr.class);
+			cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
+			Query query = session.createQuery(cr);
+			Hr z = (Hr) query.getSingleResult();
+			int b = z.getApprover();
+			System.out.println(b);
 
-		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-		Root<Hr> root = cr.from(Hr.class);
-		cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
-		Query query = session.createQuery(cr);
-		Hr z = (Hr) query.getSingleResult();
-		int b = z.getApprover();
-		System.out.println(b);
+			int a = 5;
 
-		int a = 5;
+			if (approver == false && add_team == true) {
+				hr.setApprover(b);
+				hr.setHr_role("TeamLead");
+			} else {
+				hr.setApprover(b);
+				hr.setHr_role("Rec");
+			}
 
-		if (approver == false && add_team == true) {
-			hr.setApprover(b);
-			hr.setHr_role("TeamLead");
-		} else {
-			hr.setApprover(b);
-			hr.setHr_role("Rec");
+			hrRepo.save(hr);
+
+			session.close();
+			return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
+		} catch (Exception e) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("something wrong");
 		}
 
-		hrRepo.save(hr);
+	}
 
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
+	public ResponseEntity<String> submitAnswers(int candidate_id, List<Answer> answers) throws Exception {
+
+		try {
+			Candidate candidate = candidateRepo.findById(candidate_id)
+					.orElseThrow(() -> new Exception("User not found with id: " + candidate_id));
+
+			for (Answer answer : answers) {
+				int questionId = answer.getQuestion().getQuestion_id();
+				Question question = questionRepo.findById(questionId)
+						.orElseThrow(() -> new Exception("Question not found with id: " + questionId));
+
+				answer.setQuestion(question);
+				answer.setCandidate(candidate);
+			}
+			answerRepo.saveAll(answers);
+			return ResponseEntity.ok("Rating added successfully");
+
+		}
+
+		catch (Exception e) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
+	}
+
+	public ResponseEntity<?> getCandidateTotalScore( Candidate candidate) {
+
+		try {
+			 candidate = candidateRepo.findById(candidate.getCandidate_id())
+					.orElseThrow(() -> new Exception("Candidate not found with id: "));
+
+			List<Answer> candidateAnswers = answerRepo.findByCandidate(candidate);
+
+			int totalScore = candidateAnswers.stream().filter(Answer::isAnswer)
+					.mapToInt(answer -> answer.getQuestion().getWeightage()).sum();
+			int totalRecords = candidateAnswers.size();
+			int totalQuestions = questionRepo.findAll().size();
+			System.out.println(totalScore);
+			double averageScore = totalRecords == 0 ? 0.0 : (double) totalScore / totalRecords * totalQuestions;
+			return ResponseEntity.ok(averageScore);
+		}
+
+		catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+
+		}
 
 	}
 
@@ -336,17 +397,17 @@ public class Ccrservice {
 				System.out.println(i);
 				sendOtpEmail(i, otp);
 				session.close();
-	
+
 				return ResponseEntity.ok("OTP sent successfully");
-				
+
 			}
-			
+
 		} catch (Exception e) {
-			
+
 			session.close();
 			return ResponseEntity.badRequest().body("Enter Correct Email");
 		}
-	
+
 		return null;
 
 	}
@@ -385,13 +446,12 @@ public class Ccrservice {
 			Candidate result = (Candidate) query.getSingleResult();
 			// Perform password change logic here using the 'result' object
 
-
-	        session.close();
-	        return ResponseEntity.status(HttpStatus.OK).body("You Have Entered Correct OTP....");
-	    } catch (Exception e) {
-	        session.close();
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please Enter Correct OTP....");
-	    }
+			session.close();
+			return ResponseEntity.status(HttpStatus.OK).body("You Have Entered Correct OTP....");
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Please Enter Correct OTP....");
+		}
 
 	}
 
@@ -399,85 +459,82 @@ public class Ccrservice {
 
 		Session session = entityManager.unwrap(Session.class);
 		try {
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
 
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()));
+			Root<Candidate> root = cr.from(Candidate.class);
+			cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()));
 
-		Query query = session.createQuery(cr);
+			Query query = session.createQuery(cr);
 
-		Candidate retrievedCandidate = (Candidate) query.getSingleResult();
+			Candidate retrievedCandidate = (Candidate) query.getSingleResult();
 
-		if (retrievedCandidate != null) {
-			retrievedCandidate.setCandidate_password(candidate.getCandidate_password());
-			candidateRepo.save(retrievedCandidate);
+			if (retrievedCandidate != null) {
+				retrievedCandidate.setCandidate_password(candidate.getCandidate_password());
+				candidateRepo.save(retrievedCandidate);
 
-			session.close();
+				session.close();
 
-			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
-		}
-		
-	
+				return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+			}
+
 		} catch (Exception e) {
-	        session.close();
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
-	    }
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
 		return null;
 
 	}
 
 	public ResponseEntity<String> candchangepass(int candidate_id, String currentpass, String newpass) {
-		 Session session = entityManager.unwrap(Session.class);
-		 CriteriaBuilder cb = session.getCriteriaBuilder();
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
-		 Root<Candidate> root = cr.from(Candidate.class);
+		Root<Candidate> root = cr.from(Candidate.class);
 		cr.select(root).where(cb.equal(root.get("candidate_id"), candidate_id),
-		cb.equal(root.get("candidate_password"), currentpass));
-		 Query query = session.createQuery(cr);
-		 Candidate results = null;
+				cb.equal(root.get("candidate_password"), currentpass));
+		Query query = session.createQuery(cr);
+		Candidate results = null;
 		try {
-		results = (Candidate) query.getSingleResult();
-		candidate = candidateRepo.getById(candidate_id);
-	candidate.setCandidate_password(newpass);
-	candidateRepo.save(candidate);
-	session.close();
-	return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
-		}catch (Exception e) {
-		 
-		session.close();
-		 	return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
-		 }
+			results = (Candidate) query.getSingleResult();
+			candidate = candidateRepo.getById(candidate_id);
+			candidate.setCandidate_password(newpass);
+			candidateRepo.save(candidate);
+			session.close();
+			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+		} catch (Exception e) {
+
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Current password doesnt matched");
+		}
 	}
-	
+
 	public ResponseEntity<?> ccrlogin(CcrAdmin ccradmin) {
-	    Session session = entityManager.unwrap(Session.class);
-	    try {
-	        CriteriaBuilder cb = session.getCriteriaBuilder();
-	        CriteriaQuery<CcrAdmin> cr = cb.createQuery(CcrAdmin.class);
-	        Root<CcrAdmin> root = cr.from(CcrAdmin.class);
-	        cr.select(root)
-	                .where(cb.equal(root.get("ccr_email"), ccradmin.getCcr_email()),
-	                        cb.equal(root.get("ccr_password"), ccradmin.getCcr_password()));
-	        TypedQuery<CcrAdmin> query = session.createQuery(cr);
+		Session session = entityManager.unwrap(Session.class);
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<CcrAdmin> cr = cb.createQuery(CcrAdmin.class);
+			Root<CcrAdmin> root = cr.from(CcrAdmin.class);
+			cr.select(root).where(cb.equal(root.get("ccr_email"), ccradmin.getCcr_email()),
+					cb.equal(root.get("ccr_password"), ccradmin.getCcr_password()));
+			TypedQuery<CcrAdmin> query = session.createQuery(cr);
 
-	        ccrAdmin = query.getSingleResult();
+			ccrAdmin = query.getSingleResult();
 
-	        if (ccrAdmin != null) {
-	            session.close();
+			if (ccrAdmin != null) {
+				session.close();
 
-	            return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
-	        }
-	    } catch (Exception e) {
-	        session.close();
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
-	    }
-	    return null;
+				return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
+			}
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
+		}
+		return null;
 	}
-	
-	
+
 	public ResponseEntity<String> addccradmin(CcrAdmin ccradmin) {
-	
+
 		Session session = entityManager.unwrap(Session.class);
 
 		ccradmin.setCcr_name(ccradmin.getCcr_name());
@@ -489,32 +546,22 @@ public class Ccrservice {
 		return ResponseEntity.status(HttpStatus.CREATED).body("New CCR Admin Added Sucessfully....");
 	}
 
-
 	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {
 
-	    boolean[] answers = {
-	            ratingForm.isQ1(),
-	            ratingForm.isQ2(),
-	            ratingForm.isQ3(),
-	            ratingForm.isQ4(),
-	            ratingForm.isQ5(),
-	            ratingForm.isQ6(),
-	            ratingForm.isQ7(),
-	            ratingForm.isQ8(),
-	            ratingForm.isQ9(),
-	            ratingForm.isQ10()
-	        };
+		boolean[] answers = { ratingForm.isQ1(), ratingForm.isQ2(), ratingForm.isQ3(), ratingForm.isQ4(),
+				ratingForm.isQ5(), ratingForm.isQ6(), ratingForm.isQ7(), ratingForm.isQ8(), ratingForm.isQ9(),
+				ratingForm.isQ10() };
 
-	        int[] weightages = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
-	        int totalScore = 0;
-	        for (int i = 0; i < answers.length; i++) {
-	            if (answers[i]) {
-	                totalScore += weightages[i];
-	            }
-	        }
-	        ratingForm.setRating_total(totalScore);
-	        ratingRepo.save(ratingForm);
-	        return ResponseEntity.ok("Answers for 10 questions saved");
+		int[] weightages = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
+		int totalScore = 0;
+		for (int i = 0; i < answers.length; i++) {
+			if (answers[i]) {
+				totalScore += weightages[i];
+			}
+		}
+		ratingForm.setRating_total(totalScore);
+		ratingRepo.save(ratingForm);
+		return ResponseEntity.ok("Answers for 10 questions saved");
 	}
 
 	public ResponseEntity<String> Rating(Boolean q1, Boolean q2, int total, int candidate_id, int total2, int rec_id) {
@@ -586,4 +633,10 @@ public class Ccrservice {
 		}
 
 	}
+	
+	
+	
+	
+	
+	
 }

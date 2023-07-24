@@ -34,6 +34,10 @@ public class Candidate {
 	@OneToMany(mappedBy = "candidate")
 	@JsonIgnore
 	private List<RatingForm> ratingform;
+	
+	@OneToMany(mappedBy = "candidate")
+	@JsonIgnore
+	private List<Answer> answer;
 
 
 //	@ManyToMany
@@ -139,6 +143,14 @@ public class Candidate {
 
 	public void setCandidate_token(Integer candidate_token) {
 		this.candidate_token = candidate_token;
+	}
+
+	public List<Answer> getAnswer() {
+		return answer;
+	}
+
+	public void setAnswer(List<Answer> answer) {
+		this.answer = answer;
 	}
 
 
