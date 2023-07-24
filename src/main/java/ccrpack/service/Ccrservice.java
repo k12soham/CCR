@@ -1,11 +1,18 @@
 package ccrpack.service;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +21,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
@@ -36,6 +44,12 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
 
 @Service
 public class Ccrservice {
@@ -66,6 +80,8 @@ public class Ccrservice {
 
 	@PersistenceContext
 	EntityManager entityManager;
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
+    private String uploadDir;
 
 	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
@@ -654,33 +670,9 @@ public class Ccrservice {
 	}
 
 
-//	public void calculateAndSaveRating(RatingForm request) {
-//    List<Boolean> answers = request.getAnswers();
-//    int[] weightages = {5, 3, 2, 4, 1, 2, 3, 4, 2, 5}; // Hardcoded weightages for 10 questions
-//
-//    if (answers.size() == weightages.length) {
-//        double totalWeightage = 0;
-//        double totalWeightedScore = 0;
-//
-//        for (int i = 0; i < answers.size(); i++) {
-//            boolean answer = answers.get(i);
-//            int weightage = weightages[i];
-//
-//            totalWeightage += weightage;
-//            if (answer) {
-//                totalWeightedScore += weightage;
-//            }
-//        }
-//
-//        double average = totalWeightedScore / totalWeightage;
-//
 
-//}
-//	}
+	
 
-//	public ResponseEntity<String> saveYesNoAns(RatingForm ratingForm) {	
-//		ratingRepo.save(ratingForm);
-//		return ResponseEntity.status(HttpStatus.OK).body("Ans of 10 question saved");
-//	}
 
+	
 }

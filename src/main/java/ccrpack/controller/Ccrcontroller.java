@@ -1,13 +1,27 @@
 package ccrpack.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +35,7 @@ import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
+import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.RatingRepo;
@@ -29,6 +44,12 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
+//new
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+
+
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -56,6 +77,9 @@ public class Ccrcontroller {
 
 	@PersistenceContext
 	EntityManager entityManager;
+	
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
+    private String uploadDir;
 
 	// Login CCR Admin
 	@PostMapping(value = "/ccradminlogin")
@@ -188,5 +212,106 @@ public class Ccrcontroller {
 		return ccrservice.addccradmin(ccradmin);
 
 	}
+	
+	//Backround verfication candidate Aadhar
 
+//	 @PostMapping("/upload")
+//	    public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
+//	        try {
+//	            // Generate a unique file name to prevent filename collisions
+//	            String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+//	            String filePath = Paths.get(uploadDir, uniqueFileName).toString();
+//
+//	            // Save the image file to the specified directory
+//	            Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+//
+//	            Candidate imageEntity = new Candidate();
+//	            imageEntity.setName(uniqueFileName);
+//	            imageEntity.setFilePath(filePath);
+//	            candinter.save(imageEntity);
+//
+//	            return ResponseEntity.ok("Image uploaded successfully.");
+//	        } catch (IOException e) {
+//	            e.printStackTrace();
+//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+//	        }
+//	    }
+	@PostMapping("/upload")
+	public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
+	    try {
+//	    	Tesseract tesseract = new Tesseract();
+//	    	 byte[] imageBytes = file.getBytes();
+//	    	  String result = tesseract.doOCR(new ByteArrayInputStream(imageBytes));
+	        if (file.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
+	        }
+
+	        // Check if the uploaded file is an image (you can add more image format checks if needed)
+	        if (!file.getContentType().startsWith("image/")) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
+	        }
+
+	    
+	        if (!isValidAadharCard(file)) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Aadhar card document. Please upload a valid Aadhar card image.");
+	        }
+
+	      
+	        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+	        String filePath = Paths.get(uploadDir, uniqueFileName).toString();
+
+	  
+	        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+
+	        Candidate imageEntity = new Candidate();
+	        imageEntity.setName(uniqueFileName);
+	        imageEntity.setFilePath(filePath);
+	        candinter.save(imageEntity);
+	       
+	        return ResponseEntity.ok("Image uploaded successfully.");
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+	    }
+	}
+
+	private boolean isValidAadharCard(MultipartFile file) throws IOException {
+	  
+	    try {
+	        String extractedText = performOcrOnImage(file); 
+	        System.out.println(extractedText);
+	        
+	       
+
+     	 if (extractedText != null && extractedText.matches("b\\d{4}\\s\\d{4}\\s\\d{4}\\b")) {
+     	
+	            return true;
+	        }
+	}catch (IOException e) {
+	        e.printStackTrace();
+	    }
+
+	    return false;
+	}
+	
+	private String performOcrOnImage(MultipartFile file) throws IOException {
+	    Tesseract tesseract = new Tesseract();
+	
+	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
+	    tesseract.setLanguage("eng");
+	  
+	    try {
+	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
+	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
+	        file.transferTo(imageFile);
+	        
+	        // Perform OCR on the image and extract the text.
+	        return tesseract.doOCR(imageFile);
+	    } catch (TesseractException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+
+	
 }
