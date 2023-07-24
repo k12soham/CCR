@@ -1,25 +1,38 @@
 package ccrpack.service;
-import java.io.ByteArrayInputStream;
+
+
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+import java.io.ByteArrayInputStream;
+
+
 import java.util.List;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
-import ccrpack.entity.OcrResult;
 import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.AnswerRepo;
@@ -27,7 +40,6 @@ import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
-import ccrpack.repo.OcrResultRepository;
 import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
@@ -40,6 +52,14 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 
@@ -67,8 +87,6 @@ public class Ccrservice {
 	@Autowired
 	AnswerRepo answerRepo;
 	
-	@Autowired
-	OcrResultRepository ocrRepo;
 	
 	private ITesseract tesseract;
 	
@@ -84,13 +102,14 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
-	OcrResult ocrResult = new OcrResult();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
 
 	@PersistenceContext
 	EntityManager entityManager;
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
+    private String uploadDir;
 
 	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
@@ -684,20 +703,8 @@ public class Ccrservice {
 		}
 
 	}
+
 	
-	public OcrResult saveImage(OcrResult file){
-		return ocrRepo.save(file);
-	}
-	
-	
-	public String extractTextFromImage(byte[] imageBytes) {
-		try {
-			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
-		}catch(Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
+
 	
 }
