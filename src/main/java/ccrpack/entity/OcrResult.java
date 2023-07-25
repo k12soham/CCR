@@ -13,39 +13,38 @@ public class OcrResult {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	private String name;
-	
+
 	@Lob
-    private byte[] imageData;
-	
+	private byte[] imageData;
+
 	private String filePath;
-	
-	@Column(length=5000)
+
+	@Column(length = 5000)
 	private String extractedCharacters;
 
-	
 	public OcrResult() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public OcrResult(Long id, String extractedText, byte[] imageData) {
+	public OcrResult(Long id, String name, byte[] imageData, String filePath, String extractedCharacters) {
 		super();
 		this.id = id;
+		this.name = name;
 		this.imageData = imageData;
+		this.filePath = filePath;
+		this.extractedCharacters = extractedCharacters;
 	}
-	
+
 	public String getFilePath() {
 		return filePath;
 	}
 
-
-
 	public void setFilePath(String filePath) {
 		this.filePath = filePath;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -54,26 +53,20 @@ public class OcrResult {
 		this.id = id;
 	}
 
-	public byte[] getImageData() {
-		return imageData;
-	}
-
-
-
-	public void setImageData(byte[] imageData) {
-		this.imageData = imageData;
-	}
-
-
-
 	public String getName() {
 		return name;
 	}
 
-
-
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public byte[] getImageData() {
+		return imageData;
+	}
+
+	public void setImageData(byte[] imageData) {
+		this.imageData = imageData;
 	}
 
 	public String getExtractedCharacters() {
@@ -83,6 +76,5 @@ public class OcrResult {
 	public void setExtractedCharacters(String extractedCharacters) {
 		this.extractedCharacters = extractedCharacters;
 	}
-	
-	
+
 }

@@ -1,10 +1,9 @@
 package ccrpack.service;
 
-
-
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
@@ -15,7 +14,6 @@ import java.nio.file.StandardCopyOption;
 
 import java.io.ByteArrayInputStream;
 
-
 import java.util.List;
 import java.util.UUID;
 
@@ -23,13 +21,23 @@ import javax.imageio.ImageIO;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.http.HttpHeaders;
+
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import org.springframework.util.StringUtils;
 
 import ccrpack.entity.Answer;
@@ -60,7 +68,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -93,13 +100,11 @@ public class Ccrservice {
 
 	@Autowired
 	AnswerRepo answerRepo;
-	
+
 	@Autowired
 	OcrResultRepo ocrRepo;
-	
+
 	private ITesseract tesseract;
-	
-	
 
 	public Ccrservice() {
 		tesseract = new Tesseract();
@@ -111,14 +116,16 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
+	OcrResult ocrResult = new OcrResult();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
 
 	@PersistenceContext
 	EntityManager entityManager;
-	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
-    private String uploadDir;
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in
+							// application.properties
+	private String uploadDir;
 
 	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
@@ -204,8 +211,8 @@ public class Ccrservice {
 			if (hr != null) {
 
 				session.close();
-				return new ResponseEntity<>(hr, HttpStatus.OK);
 
+				return new ResponseEntity<>(hr, HttpStatus.OK);
 			}
 		} catch (Exception e) {
 			session.close();
@@ -361,10 +368,10 @@ public class Ccrservice {
 		}
 	}
 
-	public ResponseEntity<?> getCandidateAverageScore( Candidate candidate) {
+	public ResponseEntity<?> getCandidateAverageScore(Candidate candidate) {
 
 		try {
-			 candidate = candidateRepo.findById(candidate.getCandidate_id())
+			candidate = candidateRepo.findById(candidate.getCandidate_id())
 					.orElseThrow(() -> new Exception("Candidate not found with id: "));
 
 			List<Answer> candidateAnswers = answerRepo.findByCandidate(candidate);
@@ -602,11 +609,11 @@ public class Ccrservice {
 //		int category4Score = 0;
 //		int category5Score = 0;
 
-	        for (int i = 0; i < answers.length; i++) {
-	            if (answers[i]) {
-	                totalScore += weightages[i];
-	            }
-	        }
+		for (int i = 0; i < answers.length; i++) {
+			if (answers[i]) {
+				totalScore += weightages[i];
+			}
+		}
 
 //		for (int i = 0; i < answers.length; i++) {
 //			if (answers[i]) {
@@ -636,7 +643,7 @@ public class Ccrservice {
 //		ratingForm.setCategory3Score(category3Score);
 //		ratingForm.setCategory4Score(category4Score);
 //		ratingForm.setCategory5Score(category5Score);
-	        
+
 		ratingForm.setRating_total(totalScore);
 
 		ratingRepo.save(ratingForm);
@@ -713,40 +720,152 @@ public class Ccrservice {
 
 	}
 
-	
+	public String extractTextFromImage(byte[] imageBytes) {
+		try {
+			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-	public OcrResult saveImage(OcrResult file){
+	public ResponseEntity<String> uploadFile(MultipartFile file) {
+		try {
+			OcrResult ocrResult1 = new OcrResult();
+			ocrResult1.setName(file.getOriginalFilename());
+			ocrResult1.setImageData(file.getBytes());
+			ocrRepo.save(ocrResult1);
+
+			return ResponseEntity.ok("Image uploaded successfully.");
+		} catch (IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+		}
+	}
+
+	public ResponseEntity<byte[]> getFile(Long id) {
+		ocrResult = ocrRepo.findById(id).orElse(null);
+		if (ocrResult != null) {
+			HttpHeaders headers = new HttpHeaders();
+
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", ocrResult.getName());
+
+			return new ResponseEntity<>(ocrResult.getImageData(), headers, HttpStatus.OK);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+
+	public OcrResult saveImage(OcrResult file) {
 		return ocrRepo.save(file);
 	}
-	
-	
-	public void getCharFromImg(Long imageId) {
+
+	public ResponseEntity<?> getCharFromImg(Long imageId) {
 		OcrResult imageData = ocrRepo.findById(imageId).orElse(null);
-		
-		if(imageData != null) {
+
+		if (imageData != null) {
 			String exctractedCaharcters = performOCR(imageData.getImageData());
-			
+
 //			ocrResult.setExtractedCharacters(exctractedCaharcters);
 			System.out.println(exctractedCaharcters);
 			ocrRepo.save(imageData);
+			
 		}
+		return ResponseEntity.ok("Chars Saved sucessfully");
 	}
-	
-	private String performOCR(byte[] image){
+
+	private String performOCR(byte[] image) {
 		tesseract = new Tesseract();
 		tesseract.setDatapath("C:\\Users\\Roshan Farkate\\AppData\\Local\\Programs\\Tesseract-OCR\\tessdata");
 		tesseract.setLanguage("eng");
 //		tesseract.setDatapath("/src/main/resources/eng.traineddata")
-		
+
 		try {
 			BufferedImage bi = ImageIO.read(new ByteArrayInputStream(image));
 			String result = tesseract.doOCR(bi);
-			
+
 			return result;
-		}catch(TesseractException | IOException e) {
+		} catch (TesseractException | IOException e) {
 			e.printStackTrace();
 			return "OCR Failed: " + e.getMessage();
 		}
 	}
+
+	public ResponseEntity<?> BackgroundVerify(MultipartFile file) {
+		try {
+//	    	Tesseract tesseract = new Tesseract();
+//	    	 byte[] imageBytes = file.getBytes();
+//	    	  String result = tesseract.doOCR(new ByteArrayInputStream(imageBytes));
+			if (file.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
+			}
+
+			// Check if the uploaded file is an image (you can add more image format checks
+			// if needed)
+			if (!file.getContentType().startsWith("image/")) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
+			}
+
+			if (!isValidAadharCard(file)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body("Invalid Aadhar card document. Please upload a valid Aadhar card image.");
+			}
+
+			String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+			String filePath = Paths.get(uploadDir, uniqueFileName).toString();
+
+			Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+
+			Candidate imageEntity = new Candidate();
+			imageEntity.setName(uniqueFileName);
+			imageEntity.setFilePath(filePath);
+			candidateRepo.save(imageEntity);
+
+			return ResponseEntity.ok("Image uploaded successfully.");
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+		}
+	}
+
+	private boolean isValidAadharCard(MultipartFile file) throws IOException {
+
+		try {
+			String extractedText = performOcrOnImage(file);
+			System.out.println(extractedText);
+
+			if (extractedText != null && extractedText.matches("b\\d{4}\\s\\d{4}\\s\\d{4}\\b")) {
+
+				return true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	private String performOcrOnImage(MultipartFile file) throws IOException {
+	    Tesseract tesseract = new Tesseract();
 	
+	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
+	    tesseract.setLanguage("eng");
+	  
+	    try {
+	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
+	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
+	        file.transferTo(imageFile);
+	        
+	        // Perform OCR on the image and extract the text.
+	        return tesseract.doOCR(imageFile);
+	    } catch (TesseractException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	
+
+		
+	}
+
 }

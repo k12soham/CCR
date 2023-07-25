@@ -1,6 +1,5 @@
 package ccrpack.controller;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -15,11 +14,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,8 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -52,10 +52,14 @@ import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.OcrResult;
-import ccrpack.entity.Question;
+
 import ccrpack.entity.RatingForm;
-import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.OcrResultRepo;
+
+import ccrpack.entity.Question;
+
+import ccrpack.repo.CandidateRepo;
+
 import ccrpack.service.Ccrservice;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
@@ -65,24 +69,18 @@ import jakarta.persistence.PersistenceContext;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
-
-
-
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
 
 	@Autowired
 	Ccrservice ccrservice;
-	
+
 	@Autowired
 	CandidateRepo candinter;
-	
+
 	@Autowired
 	OcrResultRepo ocrRepo;
-	
-
-
 
 	Hr hra = new Hr();
 	Company cm = new Company();
@@ -90,16 +88,16 @@ public class Ccrcontroller {
 	Candidate cand = new Candidate();
 	CcrAdmin cadmin = new CcrAdmin();
 	OcrResult ocrResult = new OcrResult();
-	
 
 	Question q = new Question();
 	Answer a = new Answer();
 
 	@PersistenceContext
 	EntityManager entityManager;
-	
-	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
-    private String uploadDir;
+
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in
+							// application.properties
+	private String uploadDir;
 
 	// Login CCR Admin
 	@PostMapping(value = "/ccradminlogin")
@@ -134,16 +132,6 @@ public class Ccrcontroller {
 	}
 
 	// Add recruiter from Admin
-	/*
-	 * @PostMapping(value = "/Adminaddrecruiter") public ResponseEntity<?>
-	 * AdminAddrecruiter(@RequestBody Hr hr) {
-	 * 
-	 * return ccrservice.AdminAddrecruiter(hr);
-	 * 
-	 * }
-	 */
-
-	// Add recruiter from Admin
 	@PostMapping(value = "/Adminaddrecruiter")
 	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam String hr_email, @RequestParam boolean approver, @RequestParam boolean add_team) {
@@ -168,31 +156,28 @@ public class Ccrcontroller {
 		return ccrservice.submitAnswers(candidate_id, answers);
 	}
 
-	
 	// find average score
-		@GetMapping("/averageScore")
-		public ResponseEntity<?> getCandidateAverageScore(@RequestBody Candidate candidate) {
-			return ccrservice.getCandidateAverageScore(candidate);
-			
-		}
-	
+	@GetMapping("/averageScore")
+	public ResponseEntity<?> getCandidateAverageScore(@RequestBody Candidate candidate) {
+
+		return ccrservice.getCandidateAverageScore(candidate);
+	}
+
 	// rating form data save for yes no questions and calculate total score
 	@PostMapping(value = "/saveYesNo")
 	public ResponseEntity<String> saveYesNoAns(@RequestBody RatingForm ratingForm) {
+
 		return ccrservice.saveYesNoAns(ratingForm);
 	}
-	
-	
-	   
 
 	@PostMapping(value = "/rating")
 	public ResponseEntity<String> Rating(@RequestParam Boolean q1, @RequestParam Boolean q2, @RequestParam int total,
 			@RequestParam int candidate_id, @RequestParam int rec_id) {
 
 		return ccrservice.Rating(q1, q2, total, candidate_id, total, rec_id);
-
 	}
 
+	// New request for admin from recruiters
 	@GetMapping(value = "/getnew")
 	public List<RatingForm> Getrequest(@RequestParam int rec_id) {
 
@@ -200,6 +185,7 @@ public class Ccrcontroller {
 
 	}
 
+	// Change approver
 	@PostMapping(value = "/changeapprover")
 	public ResponseEntity<String> ChangeApprover(@RequestParam Integer hrid, @RequestParam String hr_email) {
 
@@ -208,10 +194,10 @@ public class Ccrcontroller {
 	}
 
 	// Forgot password API
-
 	@PostMapping(value = "/forgot-password")
 	public ResponseEntity<String> sendOtpByEmail(@RequestBody Candidate candidate)
 			throws UnsupportedEncodingException, MessagingException {
+
 		return ccrservice.sendOtpByEmail(candidate);
 	}
 
@@ -247,148 +233,36 @@ public class Ccrcontroller {
 		return ccrservice.addccradmin(ccradmin);
 
 	}
-	
-
 
 	// save image/pdf/excel in database
-	@PostMapping(value = "/uploadFiles")
-	public ResponseEntity<String> uploadFiles(@RequestParam("file") MultipartFile file) throws IOException {
-//		try {
-//			String uploadDir = "src/main/resources/static/images";
-//			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-//			Path uploadPath = Paths.get(uploadDir);
-//			if (!Files.exists(uploadPath)) {
-//				Files.createDirectories(uploadPath);
-//			}
-//			try (InputStream inputStream = file.getInputStream()) {
-//				Files.copy(inputStream, uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-//			}
-//			ocrResult.setName(file.getOriginalFilename());
-//			ocrResult.setFilePath(uploadDir + "/" + fileName);
-//			ocrResult.setImageData(file.getBytes());
-//			ocrRepo.save(ocrResult);
-//			return ResponseEntity.ok("Image uploaded successfully.");
-//		} catch (IOException e) {
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
-//		}
-		
-		try {
-			String fileName = file.getOriginalFilename();
-			byte[] fileData = file.getBytes();
-			ocrResult.setName(fileName);
-			ocrResult.setImageData(fileData);
-			ocrRepo.save(ocrResult);
-			return ResponseEntity.ok("File uploaded");
-		}catch(IOException e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload");
-		}
-	}
-	
-	
-	@PostMapping(value ="/extactCharactersFromImage/{imageId}")
-	public ResponseEntity<String> getCharFromImg(@PathVariable Long imageId){
-		ccrservice.getCharFromImg(imageId);
-		return ResponseEntity.ok("Chars Saved sucessfully");
-	}
-	//Backround verfication candidate Aadhar
+	@PostMapping(value = "/uploadFile")
+	public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
 
-//	 @PostMapping("/upload")
-//	    public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
-//	        try {
-//	            // Generate a unique file name to prevent filename collisions
-//	            String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-//	            String filePath = Paths.get(uploadDir, uniqueFileName).toString();
-//
-//	            // Save the image file to the specified directory
-//	            Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-//
-//	            Candidate imageEntity = new Candidate();
-//	            imageEntity.setName(uniqueFileName);
-//	            imageEntity.setFilePath(filePath);
-//	            candinter.save(imageEntity);
-//
-//	            return ResponseEntity.ok("Image uploaded successfully.");
-//	        } catch (IOException e) {
-//	            e.printStackTrace();
-//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
-//	        }
-//	    }
-	@PostMapping("/uploadimage")
-	public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
-	    try {
-//	    	Tesseract tesseract = new Tesseract();
-//	    	 byte[] imageBytes = file.getBytes();
-//	    	  String result = tesseract.doOCR(new ByteArrayInputStream(imageBytes));
-	        if (file.isEmpty()) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
-	        }
+		return ccrservice.uploadFile(file);
 
-	        // Check if the uploaded file is an image (you can add more image format checks if needed)
-	        if (!file.getContentType().startsWith("image/")) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
-	        }
-
-	    
-	        if (!isValidAadharCard(file)) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Aadhar card document. Please upload a valid Aadhar card image.");
-	        }
-
-	      
-	        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-	        String filePath = Paths.get(uploadDir, uniqueFileName).toString();
-
-	  
-	        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
-
-	        Candidate imageEntity = new Candidate();
-	        imageEntity.setName(uniqueFileName);
-	        imageEntity.setFilePath(filePath);
-	        candinter.save(imageEntity);
-	       
-	        return ResponseEntity.ok("Image uploaded successfully.");
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
-	    }
 	}
 
-	private boolean isValidAadharCard(MultipartFile file) throws IOException {
-	  
-	    try {
-	        String extractedText = performOcrOnImage(file); 
-	        System.out.println(extractedText);
-	        
-	       
+	// get image/pdf/excel in database
+	@GetMapping("/getFile")
+	public ResponseEntity<byte[]> getFile(@RequestParam Long id) {
 
-     	 if (extractedText != null && extractedText.matches("b\\d{4}\\s\\d{4}\\s\\d{4}\\b")) {
-     	
-	            return true;
-	        }
-	}catch (IOException e) {
-	        e.printStackTrace();
-	    }
+		return ccrservice.getFile(id);
 
-	    return false;
 	}
-	
-	private String performOcrOnImage(MultipartFile file) throws IOException {
-	    Tesseract tesseract = new Tesseract();
-	
-	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
-	    tesseract.setLanguage("eng");
-	  
-	    try {
-	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
-	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
-	        file.transferTo(imageFile);
-	        
-	        // Perform OCR on the image and extract the text.
-	        return tesseract.doOCR(imageFile);
-	    } catch (TesseractException e) {
-	        e.printStackTrace();
-	        return null;
-	    }
+
+	// Get characters from image
+	@PostMapping(value = "/extactCharactersFromImage/{imageId}")
+	public ResponseEntity<?> getCharFromImg(@PathVariable Long imageId) {
+		return ccrservice.getCharFromImg(imageId);
+
 	}
+
+	// Backround verfication candidate Aadhar
+	@PostMapping("/background-verify")
+	public ResponseEntity<?> BackgroundVerify(@RequestParam("image") MultipartFile file) {
+
+		return ccrservice.BackgroundVerify(file);
+
+	}
+
 }
-
-
