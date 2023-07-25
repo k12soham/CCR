@@ -10,75 +10,48 @@ import jakarta.persistence.Lob;
 public class OcrResult {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY )
 	private Long id;
 
 	private String name;
-	
+
 	@Lob
-    private byte[] imageData;
-	
-	private String filePath;
-	
-
-	public String getFilePath() {
-		return filePath;
-	}
-
-
-
-	public void setFilePath(String filePath) {
-		this.filePath = filePath;
-	}
-
-
+	private byte[] imageData;
 
 	public OcrResult() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-
-
-	public OcrResult(Long id, String extractedText, byte[] imageData) {
+	public OcrResult(Long id, String name, byte[] imageData) {
 		super();
 		this.id = id;
+		this.name = name;
 		this.imageData = imageData;
 	}
-
-
 
 	public Long getId() {
 		return id;
 	}
 
-
-
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public byte[] getImageData() {
 		return imageData;
 	}
 
-
-
 	public void setImageData(byte[] imageData) {
 		this.imageData = imageData;
 	}
 
-
-
-	public String getName() {
-		return name;
-	}
-
-
-
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	
 }

@@ -1,5 +1,7 @@
 package ccrpack.service;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -7,12 +9,17 @@ import javax.imageio.ImageIO;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity.BodyBuilder;
 import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
@@ -44,6 +51,7 @@ import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 
 @Service
+
 public class Ccrservice {
 
 	@Autowired
@@ -66,13 +74,11 @@ public class Ccrservice {
 
 	@Autowired
 	AnswerRepo answerRepo;
-	
+
 	@Autowired
 	OcrResultRepository ocrRepo;
-	
+
 	private ITesseract tesseract;
-	
-	
 
 	public Ccrservice() {
 		tesseract = new Tesseract();
@@ -176,8 +182,8 @@ public class Ccrservice {
 			if (hr != null) {
 
 				session.close();
+				 
 				return new ResponseEntity<>(hr, HttpStatus.OK);
-
 			}
 		} catch (Exception e) {
 			session.close();
@@ -333,10 +339,10 @@ public class Ccrservice {
 		}
 	}
 
-	public ResponseEntity<?> getCandidateAverageScore( Candidate candidate) {
+	public ResponseEntity<?> getCandidateAverageScore(Candidate candidate) {
 
 		try {
-			 candidate = candidateRepo.findById(candidate.getCandidate_id())
+			candidate = candidateRepo.findById(candidate.getCandidate_id())
 					.orElseThrow(() -> new Exception("Candidate not found with id: "));
 
 			List<Answer> candidateAnswers = answerRepo.findByCandidate(candidate);
@@ -574,11 +580,11 @@ public class Ccrservice {
 //		int category4Score = 0;
 //		int category5Score = 0;
 
-	        for (int i = 0; i < answers.length; i++) {
-	            if (answers[i]) {
-	                totalScore += weightages[i];
-	            }
-	        }
+		for (int i = 0; i < answers.length; i++) {
+			if (answers[i]) {
+				totalScore += weightages[i];
+			}
+		}
 
 //		for (int i = 0; i < answers.length; i++) {
 //			if (answers[i]) {
@@ -608,7 +614,7 @@ public class Ccrservice {
 //		ratingForm.setCategory3Score(category3Score);
 //		ratingForm.setCategory4Score(category4Score);
 //		ratingForm.setCategory5Score(category5Score);
-	        
+
 		ratingForm.setRating_total(totalScore);
 
 		ratingRepo.save(ratingForm);
@@ -684,20 +690,42 @@ public class Ccrservice {
 		}
 
 	}
-	
-	public OcrResult saveImage(OcrResult file){
-		return ocrRepo.save(file);
-	}
-	
+
 	
 	public String extractTextFromImage(byte[] imageBytes) {
 		try {
 			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
-		}catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
-	
+
+	public ResponseEntity<String> uploadFile(MultipartFile file) {
+		try {
+			OcrResult ocrResult1 = new OcrResult();
+			ocrResult1.setName(file.getOriginalFilename());
+			ocrResult1.setImageData(file.getBytes());
+			ocrRepo.save(ocrResult1);
+
+			return ResponseEntity.ok("Image uploaded successfully.");
+		} catch (IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+		}
+	}
+
+	public ResponseEntity<byte[]> getFile(Long id) {
+		ocrResult = ocrRepo.findById(id).orElse(null);
+		if (ocrResult != null) {
+			HttpHeaders headers = new HttpHeaders();
+
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", ocrResult.getName());
+
+			return new ResponseEntity<>(ocrResult.getImageData(), headers, HttpStatus.OK);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
 }
