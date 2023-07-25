@@ -35,6 +35,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import org.springframework.web.bind.annotation.PathVariable;
+
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,9 +51,11 @@ import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.OcrResult;
 import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.CandidateRepo;
+import ccrpack.repo.OcrResultRepo;
 import ccrpack.service.Ccrservice;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
@@ -73,6 +78,9 @@ public class Ccrcontroller {
 	@Autowired
 	CandidateRepo candinter;
 	
+	@Autowired
+	OcrResultRepo ocrRepo;
+	
 
 
 
@@ -81,6 +89,7 @@ public class Ccrcontroller {
 	RatingForm rf = new RatingForm();
 	Candidate cand = new Candidate();
 	CcrAdmin cadmin = new CcrAdmin();
+	OcrResult ocrResult = new OcrResult();
 	
 
 	Question q = new Question();
@@ -231,7 +240,7 @@ public class Ccrcontroller {
 		return ccrservice.ccrlogin(ccradmin);
 	}
 
-	// Add CCR Admin from Super Admin dashboard
+	// Add CCR Admin from Super Admin dashboard for ccradmin
 	@PostMapping(value = "/addccradmin")
 	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
@@ -240,6 +249,47 @@ public class Ccrcontroller {
 	}
 	
 
+
+	// save image/pdf/excel in database
+	@PostMapping(value = "/uploadFiles")
+	public ResponseEntity<String> uploadFiles(@RequestParam("file") MultipartFile file) throws IOException {
+//		try {
+//			String uploadDir = "src/main/resources/static/images";
+//			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+//			Path uploadPath = Paths.get(uploadDir);
+//			if (!Files.exists(uploadPath)) {
+//				Files.createDirectories(uploadPath);
+//			}
+//			try (InputStream inputStream = file.getInputStream()) {
+//				Files.copy(inputStream, uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+//			}
+//			ocrResult.setName(file.getOriginalFilename());
+//			ocrResult.setFilePath(uploadDir + "/" + fileName);
+//			ocrResult.setImageData(file.getBytes());
+//			ocrRepo.save(ocrResult);
+//			return ResponseEntity.ok("Image uploaded successfully.");
+//		} catch (IOException e) {
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+//		}
+		
+		try {
+			String fileName = file.getOriginalFilename();
+			byte[] fileData = file.getBytes();
+			ocrResult.setName(fileName);
+			ocrResult.setImageData(fileData);
+			ocrRepo.save(ocrResult);
+			return ResponseEntity.ok("File uploaded");
+		}catch(IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload");
+		}
+	}
+	
+	
+	@PostMapping(value ="/extactCharactersFromImage/{imageId}")
+	public ResponseEntity<String> getCharFromImg(@PathVariable Long imageId){
+		ccrservice.getCharFromImg(imageId);
+		return ResponseEntity.ok("Chars Saved sucessfully");
+	}
 	//Backround verfication candidate Aadhar
 
 //	 @PostMapping("/upload")
@@ -263,7 +313,7 @@ public class Ccrcontroller {
 //	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
 //	        }
 //	    }
-	@PostMapping("/upload")
+	@PostMapping("/uploadimage")
 	public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile file) {
 	    try {
 //	    	Tesseract tesseract = new Tesseract();
@@ -339,11 +389,6 @@ public class Ccrcontroller {
 	        return null;
 	    }
 	}
-
-	
-
-	
-
-
-
 }
+
+

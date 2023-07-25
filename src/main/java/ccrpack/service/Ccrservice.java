@@ -1,6 +1,10 @@
 package ccrpack.service;
 
 
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
@@ -33,6 +37,7 @@ import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
+import ccrpack.entity.OcrResult;
 import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
 import ccrpack.repo.AnswerRepo;
@@ -40,6 +45,7 @@ import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
+import ccrpack.repo.OcrResultRepo;
 import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
@@ -62,6 +68,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 @Service
 public class Ccrservice {
@@ -87,6 +94,8 @@ public class Ccrservice {
 	@Autowired
 	AnswerRepo answerRepo;
 	
+	@Autowired
+	OcrResultRepo ocrRepo;
 	
 	private ITesseract tesseract;
 	
@@ -706,5 +715,38 @@ public class Ccrservice {
 
 	
 
+	public OcrResult saveImage(OcrResult file){
+		return ocrRepo.save(file);
+	}
+	
+	
+	public void getCharFromImg(Long imageId) {
+		OcrResult imageData = ocrRepo.findById(imageId).orElse(null);
+		
+		if(imageData != null) {
+			String exctractedCaharcters = performOCR(imageData.getImageData());
+			
+//			ocrResult.setExtractedCharacters(exctractedCaharcters);
+			System.out.println(exctractedCaharcters);
+			ocrRepo.save(imageData);
+		}
+	}
+	
+	private String performOCR(byte[] image){
+		tesseract = new Tesseract();
+		tesseract.setDatapath("C:\\Users\\Roshan Farkate\\AppData\\Local\\Programs\\Tesseract-OCR\\tessdata");
+		tesseract.setLanguage("eng");
+//		tesseract.setDatapath("/src/main/resources/eng.traineddata")
+		
+		try {
+			BufferedImage bi = ImageIO.read(new ByteArrayInputStream(image));
+			String result = tesseract.doOCR(bi);
+			
+			return result;
+		}catch(TesseractException | IOException e) {
+			e.printStackTrace();
+			return "OCR Failed: " + e.getMessage();
+		}
+	}
 	
 }
