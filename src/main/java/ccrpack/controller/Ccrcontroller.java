@@ -1,12 +1,44 @@
 package ccrpack.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import org.springframework.web.bind.annotation.PathVariable;
+
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,12 +52,22 @@ import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.OcrResult;
+
 import ccrpack.entity.RatingForm;
-import ccrpack.repo.OcrResultRepository;
+import ccrpack.repo.OcrResultRepo;
+
+import ccrpack.entity.Question;
+
+import ccrpack.repo.CandidateRepo;
+
 import ccrpack.service.Ccrservice;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+
+//new
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -34,8 +76,28 @@ public class Ccrcontroller {
 	@Autowired
 	Ccrservice ccrservice;
 
+	@Autowired
+	CandidateRepo candinter;
+
+	@Autowired
+	OcrResultRepo ocrRepo;
+
+	Hr hra = new Hr();
+	Company cm = new Company();
+	RatingForm rf = new RatingForm();
+	Candidate cand = new Candidate();
+	CcrAdmin cadmin = new CcrAdmin();
+	OcrResult ocrResult = new OcrResult();
+
+	Question q = new Question();
+	Answer a = new Answer();
+
 	@PersistenceContext
 	EntityManager entityManager;
+
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in
+							// application.properties
+	private String uploadDir;
 
 	// Login CCR Admin
 	@PostMapping(value = "/ccradminlogin")
@@ -164,7 +226,7 @@ public class Ccrcontroller {
 		return ccrservice.ccrlogin(ccradmin);
 	}
 
-	// Add CCR Admin from Super Admin dashboard
+	// Add CCR Admin from Super Admin dashboard for ccradmin
 	@PostMapping(value = "/addccradmin")
 	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
@@ -185,6 +247,21 @@ public class Ccrcontroller {
 	public ResponseEntity<byte[]> getFile(@RequestParam Long id) {
 
 		return ccrservice.getFile(id);
+
+	}
+
+	// Get characters from image
+	@PostMapping(value = "/extactCharactersFromImage/{imageId}")
+	public ResponseEntity<?> getCharFromImg(@PathVariable Long imageId) {
+		return ccrservice.getCharFromImg(imageId);
+
+	}
+
+	// Backround verfication candidate Aadhar
+	@PostMapping("/background-verify")
+	public ResponseEntity<?> BackgroundVerify(@RequestParam("image") MultipartFile file) {
+
+		return ccrservice.BackgroundVerify(file);
 
 	}
 

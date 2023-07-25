@@ -54,6 +54,13 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			
+		<!--	dependecy for document verification teseract -->
+    <groupId>net.sourceforge.tess4j</groupId>
+    <artifactId>tess4j</artifactId>
+    <version>4.5.1</version>
+</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
 

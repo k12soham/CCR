@@ -1,15 +1,31 @@
 package ccrpack.service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+import java.io.ByteArrayInputStream;
+
 import java.util.List;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpHeaders;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +34,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.util.StringUtils;
 
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
@@ -34,7 +53,7 @@ import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
-import ccrpack.repo.OcrResultRepository;
+import ccrpack.repo.OcrResultRepo;
 import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
@@ -47,11 +66,18 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 @Service
-
 public class Ccrservice {
 
 	@Autowired
@@ -76,7 +102,7 @@ public class Ccrservice {
 	AnswerRepo answerRepo;
 
 	@Autowired
-	OcrResultRepository ocrRepo;
+	OcrResultRepo ocrRepo;
 
 	private ITesseract tesseract;
 
@@ -97,6 +123,9 @@ public class Ccrservice {
 
 	@PersistenceContext
 	EntityManager entityManager;
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in
+							// application.properties
+	private String uploadDir;
 
 	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
@@ -182,7 +211,7 @@ public class Ccrservice {
 			if (hr != null) {
 
 				session.close();
-				 
+
 				return new ResponseEntity<>(hr, HttpStatus.OK);
 			}
 		} catch (Exception e) {
@@ -691,7 +720,6 @@ public class Ccrservice {
 
 	}
 
-	
 	public String extractTextFromImage(byte[] imageBytes) {
 		try {
 			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
@@ -726,6 +754,118 @@ public class Ccrservice {
 		} else {
 			return ResponseEntity.notFound().build();
 		}
+	}
+
+
+	public OcrResult saveImage(OcrResult file) {
+		return ocrRepo.save(file);
+	}
+
+	public ResponseEntity<?> getCharFromImg(Long imageId) {
+		OcrResult imageData = ocrRepo.findById(imageId).orElse(null);
+
+		if (imageData != null) {
+			String exctractedCaharcters = performOCR(imageData.getImageData());
+
+//			ocrResult.setExtractedCharacters(exctractedCaharcters);
+			System.out.println(exctractedCaharcters);
+			ocrRepo.save(imageData);
+			
+		}
+		return ResponseEntity.ok("Chars Saved sucessfully");
+	}
+
+	private String performOCR(byte[] image) {
+		tesseract = new Tesseract();
+		tesseract.setDatapath("C:\\Users\\Roshan Farkate\\AppData\\Local\\Programs\\Tesseract-OCR\\tessdata");
+		tesseract.setLanguage("eng");
+//		tesseract.setDatapath("/src/main/resources/eng.traineddata")
+
+		try {
+			BufferedImage bi = ImageIO.read(new ByteArrayInputStream(image));
+			String result = tesseract.doOCR(bi);
+
+			return result;
+		} catch (TesseractException | IOException e) {
+			e.printStackTrace();
+			return "OCR Failed: " + e.getMessage();
+		}
+	}
+
+	public ResponseEntity<?> BackgroundVerify(MultipartFile file) {
+		try {
+//	    	Tesseract tesseract = new Tesseract();
+//	    	 byte[] imageBytes = file.getBytes();
+//	    	  String result = tesseract.doOCR(new ByteArrayInputStream(imageBytes));
+			if (file.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
+			}
+
+			// Check if the uploaded file is an image (you can add more image format checks
+			// if needed)
+			if (!file.getContentType().startsWith("image/")) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
+			}
+
+			if (!isValidAadharCard(file)) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+						.body("Invalid Aadhar card document. Please upload a valid Aadhar card image.");
+			}
+
+			String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+			String filePath = Paths.get(uploadDir, uniqueFileName).toString();
+
+			Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+
+			Candidate imageEntity = new Candidate();
+			imageEntity.setName(uniqueFileName);
+			imageEntity.setFilePath(filePath);
+			candidateRepo.save(imageEntity);
+
+			return ResponseEntity.ok("Image uploaded successfully.");
+		} catch (IOException e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+		}
+	}
+
+	private boolean isValidAadharCard(MultipartFile file) throws IOException {
+
+		try {
+			String extractedText = performOcrOnImage(file);
+			System.out.println(extractedText);
+
+			if (extractedText != null && extractedText.matches("b\\d{4}\\s\\d{4}\\s\\d{4}\\b")) {
+
+				return true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return false;
+	}
+
+	private String performOcrOnImage(MultipartFile file) throws IOException {
+	    Tesseract tesseract = new Tesseract();
+	
+	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
+	    tesseract.setLanguage("eng");
+	  
+	    try {
+	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
+	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
+	        file.transferTo(imageFile);
+	        
+	        // Perform OCR on the image and extract the text.
+	        return tesseract.doOCR(imageFile);
+	    } catch (TesseractException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	
+
+		
 	}
 
 }

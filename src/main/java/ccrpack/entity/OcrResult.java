@@ -1,5 +1,6 @@
 package ccrpack.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,24 +11,38 @@ import jakarta.persistence.Lob;
 public class OcrResult {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY )
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
 	private String name;
 
 	@Lob
 	private byte[] imageData;
+
+	private String filePath;
+
+	@Column(length = 5000)
+	private String extractedCharacters;
 
 	public OcrResult() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public OcrResult(Long id, String name, byte[] imageData) {
+	public OcrResult(Long id, String name, byte[] imageData, String filePath, String extractedCharacters) {
 		super();
 		this.id = id;
 		this.name = name;
 		this.imageData = imageData;
+		this.filePath = filePath;
+		this.extractedCharacters = extractedCharacters;
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 
 	public Long getId() {
@@ -52,6 +67,14 @@ public class OcrResult {
 
 	public void setImageData(byte[] imageData) {
 		this.imageData = imageData;
+	}
+
+	public String getExtractedCharacters() {
+		return extractedCharacters;
+	}
+
+	public void setExtractedCharacters(String extractedCharacters) {
+		this.extractedCharacters = extractedCharacters;
 	}
 
 }
