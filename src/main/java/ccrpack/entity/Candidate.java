@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
@@ -28,12 +29,26 @@ public class Candidate {
 	private String candidate_dob;
 	private Integer candidate_otp;
 	private Integer candidate_token;
+	
+
+	@Lob
+    @Column(name = "aadhar_document")
+    private byte[] aadharDocument;
+	private String filePath;
+	private String name;
+
 
 	
+
+
 
 	@OneToMany(mappedBy = "candidate")
 	@JsonIgnore
 	private List<RatingForm> ratingform;
+	
+	@OneToMany(mappedBy = "candidate")
+	@JsonIgnore
+	private List<Answer> answer;
 
 
 //	@ManyToMany
@@ -46,26 +61,41 @@ public class Candidate {
 		// TODO Auto-generated constructor stub
 	}
 
+
+
+
+	
+
+
 	public Candidate(Integer candidate_id, Long candidate_aadhar, String candidate_name, String candidate_email,
-			String candidate_password, String candidate_phone, String candidate_dob, List<RatingForm> ratingform,
-			List<Hr> likedHr,Integer candidate_otp,Integer candidate_token) {
-		super();
-		this.candidate_id = candidate_id;
-		this.candidate_aadhar = candidate_aadhar;
-		this.candidate_name = candidate_name;
-		this.candidate_email = candidate_email;
-		this.candidate_password = candidate_password;
-		this.candidate_phone = candidate_phone;
-		this.candidate_dob = candidate_dob;
-		this.ratingform = ratingform;
-		//this.likedHr = likedHr;
-		this.candidate_otp=candidate_otp;
-		this.candidate_token=candidate_token;
-	}
+		String candidate_password, String candidate_phone, String candidate_dob, Integer candidate_otp,
+		Integer candidate_token, byte[] aadharDocument, String filePath, String name, List<RatingForm> ratingform) {
+	super();
+	this.candidate_id = candidate_id;
+	this.candidate_aadhar = candidate_aadhar;
+	this.candidate_name = candidate_name;
+	this.candidate_email = candidate_email;
+	this.candidate_password = candidate_password;
+	this.candidate_phone = candidate_phone;
+	this.candidate_dob = candidate_dob;
+	this.candidate_otp = candidate_otp;
+	this.candidate_token = candidate_token;
+	this.aadharDocument = aadharDocument;
+	this.filePath = filePath;
+	this.name = name;
+	this.ratingform = ratingform;
+}
+
+
+
+
+
+
 
 	public Integer getCandidate_id() {
 		return candidate_id;
 	}
+
 
 	public void setCandidate_id(Integer candidate_id) {
 		this.candidate_id = candidate_id;
@@ -141,6 +171,45 @@ public class Candidate {
 		this.candidate_token = candidate_token;
 	}
 
+	public List<Answer> getAnswer() {
+		return answer;
+	}
+
+	public void setAnswer(List<Answer> answer) {
+		this.answer = answer;
+	}
+
+
+	public byte[] getAadharDocument() {
+		return aadharDocument;
+	}
+
+
+	public void setAadharDocument(byte[] aadharDocument) {
+		this.aadharDocument = aadharDocument;
+	}
+
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+
+
+	public String getName() {
+		return name;
+	}
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	
 
 //	public List<HrAdmin> getLikedHr() {
 //		return likedHr;
@@ -149,5 +218,7 @@ public class Candidate {
 //	public void setLikedHr(List<HrAdmin> likedHr) {
 //		this.likedHr = likedHr;
 //	}
+	
+	
 
 }

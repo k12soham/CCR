@@ -1,41 +1,52 @@
 package ccrpack.service;
 
-import java.util.*;
+
 
 import javax.imageio.ImageIO;
-
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
-import java.util.*;
-import java.io.UnsupportedEncodingException;
-import java.net.http.HttpResponse;
+import java.io.ByteArrayInputStream;
+
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.imageio.ImageIO;
+
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
+import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.OcrResult;
+import ccrpack.entity.Question;
 import ccrpack.entity.RatingForm;
+import ccrpack.repo.AnswerRepo;
 import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
-import ccrpack.repo.OcrResultRepository;
+import ccrpack.repo.OcrResultRepo;
+import ccrpack.repo.QuestionRepo;
 import ccrpack.repo.RatingRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -47,7 +58,14 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -69,9 +87,15 @@ public class Ccrservice {
 
 	@Autowired
 	CcrRepo ccrRepo;
+
+	@Autowired
+	QuestionRepo questionRepo;
+
+	@Autowired
+	AnswerRepo answerRepo;
 	
 	@Autowired
-	OcrResultRepository ocrRepo;
+	OcrResultRepo ocrRepo;
 	
 	private ITesseract tesseract;
 	
@@ -87,13 +111,14 @@ public class Ccrservice {
 	RatingForm ratingForm = new RatingForm();
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
-	OcrResult ocrResult = new OcrResult();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
 
 	@PersistenceContext
 	EntityManager entityManager;
+	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in application.properties
+    private String uploadDir;
 
 	public ResponseEntity<?> ccrLogin(CcrAdmin ccrAdmin) {
 		Session session = entityManager.unwrap(Session.class);
@@ -275,35 +300,88 @@ public class Ccrservice {
 
 	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
+		try {
+			hr.setHr_name(hr_name);
+			hr.setAdded_by(hrid);
+			session.save(hr);
 
-		hr.setHr_name(hr_name);
-		hr.setAdded_by(hrid);
-		session.save(hr);
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 
-		CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
+			Root<Hr> root = cr.from(Hr.class);
+			cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
+			Query query = session.createQuery(cr);
+			Hr z = (Hr) query.getSingleResult();
+			int b = z.getApprover();
+			System.out.println(b);
 
-		CriteriaQuery<Hr> cr = cb.createQuery(Hr.class);
-		Root<Hr> root = cr.from(Hr.class);
-		cr.select(root).where((cb.equal(root.get("hr_admin_id"), hrid)));
-		Query query = session.createQuery(cr);
-		Hr z = (Hr) query.getSingleResult();
-		int b = z.getApprover();
-		System.out.println(b);
+			int a = 5;
 
-		int a = 5;
+			if (approver == false && add_team == true) {
+				hr.setApprover(b);
+				hr.setHr_role("TeamLead");
+			} else {
+				hr.setApprover(b);
+				hr.setHr_role("Rec");
+			}
 
-		if (approver == false && add_team == true) {
-			hr.setApprover(b);
-			hr.setHr_role("TeamLead");
-		} else {
-			hr.setApprover(b);
-			hr.setHr_role("Rec");
+			hrRepo.save(hr);
+
+			session.close();
+			return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
+		} catch (Exception e) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("something wrong");
 		}
 
-		hrRepo.save(hr);
+	}
 
-		session.close();
-		return ResponseEntity.status(HttpStatus.CREATED).body("TL saved");
+	public ResponseEntity<String> submitAnswers(int candidate_id, List<Answer> answers) throws Exception {
+
+		try {
+			Candidate candidate = candidateRepo.findById(candidate_id)
+					.orElseThrow(() -> new Exception("User not found with id: " + candidate_id));
+
+			for (Answer answer : answers) {
+				int questionId = answer.getQuestion().getQuestion_id();
+				Question question = questionRepo.findById(questionId)
+						.orElseThrow(() -> new Exception("Question not found with id: " + questionId));
+
+				answer.setQuestion(question);
+				answer.setCandidate(candidate);
+			}
+			answerRepo.saveAll(answers);
+			return ResponseEntity.ok("Rating added successfully");
+
+		}
+
+		catch (Exception e) {
+
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
+	}
+
+	public ResponseEntity<?> getCandidateAverageScore( Candidate candidate) {
+
+		try {
+			 candidate = candidateRepo.findById(candidate.getCandidate_id())
+					.orElseThrow(() -> new Exception("Candidate not found with id: "));
+
+			List<Answer> candidateAnswers = answerRepo.findByCandidate(candidate);
+
+			int totalScore = candidateAnswers.stream().filter(Answer::isAnswer)
+					.mapToInt(answer -> answer.getQuestion().getWeightage()).sum();
+			int totalRecords = candidateAnswers.size();
+			int totalQuestions = questionRepo.findAll().size();
+			System.out.println(totalScore);
+			double averageScore = totalRecords == 0 ? 0.0 : (double) totalScore / totalRecords * totalQuestions;
+			return ResponseEntity.ok(averageScore);
+		}
+
+		catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+
+		}
 
 	}
 
@@ -416,34 +494,33 @@ public class Ccrservice {
 
 	}
 
-	public ResponseEntity<String> finalcandchangepass(String candidate_email, String newpass) {
+	public ResponseEntity<String> finalcandchangepass(Candidate candidate) {
 
 		Session session = entityManager.unwrap(Session.class);
+		try {
+			CriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
 
-		CriteriaBuilder cb = session.getCriteriaBuilder();
-		CriteriaQuery<Candidate> cr = cb.createQuery(Candidate.class);
+			Root<Candidate> root = cr.from(Candidate.class);
+			cr.select(root).where(cb.equal(root.get("candidate_email"), candidate.getCandidate_email()));
 
-		Root<Candidate> root = cr.from(Candidate.class);
-		cr.select(root).where(cb.equal(root.get("candidate_email"), candidate_email));
+			Query query = session.createQuery(cr);
 
-		Query query = session.createQuery(cr);
+			Candidate retrievedCandidate = (Candidate) query.getSingleResult();
 
-		Candidate retrievedCandidate = (Candidate) query.getSingleResult();
-		System.out.println(retrievedCandidate.getCandidate_name());
+			if (retrievedCandidate != null) {
+				retrievedCandidate.setCandidate_password(candidate.getCandidate_password());
+				candidateRepo.save(retrievedCandidate);
 
-		if (retrievedCandidate != null) {
-			retrievedCandidate.setCandidate_password(newpass);
-			candidateRepo.save(retrievedCandidate);
+				session.close();
 
+				return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+			}
+
+		} catch (Exception e) {
 			session.close();
-
-			return ResponseEntity.status(HttpStatus.CREATED).body("Password Changed Sucessfully");
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
 		}
-
-//		    	System.out.println(e);
-//		        session.close();
-//		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Enter Correct Email....");
-
 		return null;
 
 	}
@@ -485,13 +562,6 @@ public class Ccrservice {
 
 			if (ccrAdmin != null) {
 				session.close();
-//
-//	            
-//	            if (ccrAdmin.getCcr_role().equals("super")) {
-//	                System.out.println("Welcome to Super Admin Dashboard");
-//	            } else if (ccrAdmin.getCcr_role().equals("ccr")) {
-//	                System.out.println("Welcome to CCR Admin Dashboard");
-//	            }
 
 				return new ResponseEntity<>(ccrAdmin, HttpStatus.OK);
 			}
@@ -642,7 +712,9 @@ public class Ccrservice {
 		}
 
 	}
+
 	
+
 	public OcrResult saveImage(OcrResult file){
 		return ocrRepo.save(file);
 	}
@@ -676,6 +748,5 @@ public class Ccrservice {
 			return "OCR Failed: " + e.getMessage();
 		}
 	}
-	
 	
 }
