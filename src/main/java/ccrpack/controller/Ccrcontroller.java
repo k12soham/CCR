@@ -317,7 +317,6 @@ public class Ccrcontroller {
 	}catch (IOException e) {
 	        e.printStackTrace();
 	    }
-
 	    return false;
 	}
 	
