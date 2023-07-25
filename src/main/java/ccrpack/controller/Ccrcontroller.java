@@ -240,7 +240,7 @@ public class Ccrcontroller {
 		return ccrservice.ccrlogin(ccradmin);
 	}
 
-	// Add CCR Admin from Super Admin dashboard
+	// Add CCR Admin from Super Admin dashboard for ccradmin
 	@PostMapping(value = "/addccradmin")
 	public ResponseEntity<String> addccradmin(@RequestBody CcrAdmin ccradmin) {
 
