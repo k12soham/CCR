@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -200,23 +201,42 @@ public class Ccrcontroller {
 	// save image/pdf/excel in database
 	@PostMapping(value = "/uploadFiles")
 	public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+//		try {
+//			String uploadDir = "src/main/resources/static/images";
+//			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+//			Path uploadPath = Paths.get(uploadDir);
+//			if (!Files.exists(uploadPath)) {
+//				Files.createDirectories(uploadPath);
+//			}
+//			try (InputStream inputStream = file.getInputStream()) {
+//				Files.copy(inputStream, uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+//			}
+//			ocrResult.setName(file.getOriginalFilename());
+//			ocrResult.setFilePath(uploadDir + "/" + fileName);
+//			ocrResult.setImageData(file.getBytes());
+//			ocrRepo.save(ocrResult);
+//			return ResponseEntity.ok("Image uploaded successfully.");
+//		} catch (IOException e) {
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+//		}
+		
 		try {
-			String uploadDir = "src/main/resources/static/images";
-			String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-			Path uploadPath = Paths.get(uploadDir);
-			if (!Files.exists(uploadPath)) {
-				Files.createDirectories(uploadPath);
-			}
-			try (InputStream inputStream = file.getInputStream()) {
-				Files.copy(inputStream, uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-			}
-			ocrResult.setName(file.getOriginalFilename());
-			ocrResult.setFilePath(uploadDir + "/" + fileName);
-			ocrResult.setImageData(file.getBytes());
+			String fileName = file.getOriginalFilename();
+			byte[] fileData = file.getBytes();
+			ocrResult.setName(fileName);
+			ocrResult.setImageData(fileData);
 			ocrRepo.save(ocrResult);
-			return ResponseEntity.ok("Image uploaded successfully.");
-		} catch (IOException e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image.");
+			return ResponseEntity.ok("File uploaded");
+		}catch(IOException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload");
 		}
 	}
+	
+	@PostMapping(value ="/extactCharactersFromImage/{imageId}")
+	public ResponseEntity<String> getCharFromImg(@PathVariable Long imageId){
+		ccrservice.getCharFromImg(imageId);
+		return ResponseEntity.ok("Chars Saved sucessfully");
+	}
 }
+
+

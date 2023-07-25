@@ -4,6 +4,7 @@ import java.util.*;
 
 import javax.imageio.ImageIO;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -49,6 +50,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 
 @Service
 public class Ccrservice {
@@ -646,12 +648,32 @@ public class Ccrservice {
 	}
 	
 	
-	public String extractTextFromImage(byte[] imageBytes) {
+	public void getCharFromImg(Long imageId) {
+		OcrResult imageData = ocrRepo.findById(imageId).orElse(null);
+		
+		if(imageData != null) {
+			String exctractedCaharcters = performOCR(imageData.getImageData());
+			
+//			ocrResult.setExtractedCharacters(exctractedCaharcters);
+			System.out.println(exctractedCaharcters);
+			ocrRepo.save(imageData);
+		}
+	}
+	
+	private String performOCR(byte[] image){
+		tesseract = new Tesseract();
+		tesseract.setDatapath("C:\\Users\\Roshan Farkate\\AppData\\Local\\Programs\\Tesseract-OCR\\tessdata");
+		tesseract.setLanguage("eng");
+//		tesseract.setDatapath("/src/main/resources/eng.traineddata")
+		
 		try {
-			return tesseract.doOCR(ImageIO.read(new ByteArrayInputStream(imageBytes)));
-		}catch(Exception e) {
+			BufferedImage bi = ImageIO.read(new ByteArrayInputStream(image));
+			String result = tesseract.doOCR(bi);
+			
+			return result;
+		}catch(TesseractException | IOException e) {
 			e.printStackTrace();
-			return null;
+			return "OCR Failed: " + e.getMessage();
 		}
 	}
 	
