@@ -36,6 +36,10 @@ public class Hr {
 
 	private Integer approver;
 
+	private boolean added_power;
+
+	private boolean approve_power;
+
 //	 @ManyToMany(mappedBy = "likedHr")
 //	 List<Candidate> likes;
 
@@ -44,8 +48,9 @@ public class Hr {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password,
-			String hr_role, Company company, List<RatingForm> ratingform, Integer added_by, Integer approver) {
+	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password, String hr_role,
+			Company company, List<RatingForm> ratingform, Integer added_by, Integer approver, boolean added_power,
+			boolean approve_power) {
 		super();
 		this.hr_id = hr_id;
 		this.hr_name = hr_name;
@@ -57,6 +62,8 @@ public class Hr {
 		this.ratingform = ratingform;
 		this.added_by = added_by;
 		this.approver = approver;
+		this.added_power = added_power;
+		this.approve_power = approve_power;
 	}
 
 	public Integer getHr_id() {
@@ -137,6 +144,22 @@ public class Hr {
 
 	public void setApprover(Integer approver) {
 		this.approver = approver;
+	}
+
+	public boolean isAdded_power() {
+		return added_power;
+	}
+
+	public void setAdded_power(boolean added_power) {
+		this.added_power = added_power;
+	}
+
+	public boolean isApprove_power() {
+		return approve_power;
+	}
+
+	public void setApprove_power(boolean approve_power) {
+		this.approve_power = approve_power;
 	}
 
 }
