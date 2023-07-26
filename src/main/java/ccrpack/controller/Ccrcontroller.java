@@ -132,20 +132,34 @@ public class Ccrcontroller {
 	}
 
 	// Add recruiter from Admin
-	@PostMapping(value = "/Adminaddrecruiter")
+	/*@PostMapping(value = "/Adminaddrecruiter")
 	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
 			@RequestParam String hr_email, @RequestParam boolean approver, @RequestParam boolean add_team) {
 
 		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
 
-	}
+	}*/
+	
+	// Add recruiter from Admin
+		@PostMapping(value = "/Adminaddrecruiter")
+		public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid,@RequestBody Hr hr) {
+
+			return ccrservice.AdminAddrecruiter(hrid,hr);
+
+		}
 
 	// Add recruiter from TeamLead
-	@PostMapping(value = "/TLaddrecruiter")
+/*	@PostMapping(value = "/TLaddrecruiter")
 	public ResponseEntity<?> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
-			@RequestParam boolean approver, @RequestParam boolean add_team) {
+			@RequestParam int approver, @RequestParam boolean add_team) {
 
 		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
+	}*/
+	
+	@PostMapping(value = "/Recruiteraddrecruiter")
+	public ResponseEntity<?> RecruiterAddrecruiter(@RequestBody Hr hr) {
+
+		return ccrservice.RecruiterAddrecruiter(hr);
 	}
 
 	// add answers of candidate

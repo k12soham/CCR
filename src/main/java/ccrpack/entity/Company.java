@@ -22,6 +22,7 @@ public class Company {
 	private Long company_tan;
 
 	@OneToOne(mappedBy = "company")
+	@JsonIgnore
 	private Hr hr;
 
 	public Company() {

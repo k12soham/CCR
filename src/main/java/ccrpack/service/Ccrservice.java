@@ -147,6 +147,7 @@ public class Ccrservice {
 
 			}
 		} catch (Exception e) {
+
 			session.close();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
 		}
@@ -214,7 +215,9 @@ public class Ccrservice {
 
 				return new ResponseEntity<>(hr, HttpStatus.OK);
 			}
+
 		} catch (Exception e) {
+
 			session.close();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Wrong credentials");
 		}
@@ -242,37 +245,14 @@ public class Ccrservice {
 			session.close();
 			return ResponseEntity.status(HttpStatus.CREATED).body("comapny registered");
 		} catch (Exception e) {
+
 			session.close();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
 		}
 
 	}
 
-	/*
-	 * public ResponseEntity<?> AdminAddrecruiter(Hr hr) { Session session =
-	 * entityManager.unwrap(Session.class);
-	 * 
-	 * hr.setHr_name(hr.getHr_name()); hr.setHr_email(hr.getHr_email());
-	 * hr.setHr_password("1234"); hr.setAdded_by(hr.getHr_id());
-	 * 
-	 * 
-	 * 
-	 * session.save(hr);
-	 * 
-	 * if (==true && ==true) { int a = hr.getHr_id(); hr.setApprover(a);
-	 * 
-	 * hr.setHr_role("Admin"); } else if (hr.getApprover().equals(false) &&
-	 * hr.getAdded_by().equals(true)) { hr.setApprover(hr.getHr_id());
-	 * hr.setHr_role("TeamLead"); } else { hr.setApprover(hr.getHr_id());
-	 * hr.setHr_role("Rec"); }
-	 * 
-	 * hrRepo.save(hr);
-	 * 
-	 * session.close(); return
-	 * ResponseEntity.status(HttpStatus.CREATED).body("Admin saved"); }
-	 */
-
-	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, String hr_email, boolean approver,
+	/*public ResponseEntity<String> AdminAddrecruiter(Integer hrid, String hr_name, String hr_email, boolean approver,
 			boolean add_team) {
 
 		Session session = entityManager.unwrap(Session.class);
@@ -303,9 +283,77 @@ public class Ccrservice {
 			session.close();
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
 		}
+	}*/
+
+	public ResponseEntity<String> AdminAddrecruiter(Integer hrid, Hr hr) {
+	
+		Session session = entityManager.unwrap(Session.class);
+		try {
+
+			hr.setHr_name(hr.getHr_name());
+			hr.setHr_email(hr.getHr_email());
+			hr.setHr_password("1234");
+
+			hr.setAdded_by(hr.getHr_id());
+			hr.setAdded_power(hr.isAdded_power());
+			hr.setApprove_power(hr.isApprove_power());
+			session.save(hr);
+
+			if (hr.isAdded_power() == true && hr.isApprove_power() == true) {
+				
+				hr.setApprover(hr.getHr_id());
+				hr.setHr_role("Admin");
+				hrRepo.save(hr);
+				session.close();
+				return ResponseEntity.status(HttpStatus.CREATED).body("Admin saved");
+			} else if (hr.isAdded_power() == true && hr.isApprove_power() == false) {
+				hr.setApprover(hrid);
+				hr.setHr_role("Rec");
+				hrRepo.save(hr);
+				session.close();
+				return ResponseEntity.status(HttpStatus.CREATED).body("tl saved");
+			} else if(hr.isAdded_power() == false && hr.isApprove_power() == false){
+				hr.setApprover(hrid);
+				hr.setHr_role("Rec");
+				hrRepo.save(hr);
+				return ResponseEntity.status(HttpStatus.CREATED).body("rec saved");
+			}
+			else {
+				session.close();
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("wrong power");
+			}
+
+		} catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
+
+	}
+	
+	
+	public ResponseEntity<?> RecruiterAddrecruiter(Hr hr) {
+		Session session = entityManager.unwrap(Session.class);
+		try {
+
+			hr.setHr_name(hr.getHr_name());
+			hr.setHr_email(hr.getHr_email());
+			hr.setHr_password("1234");
+			hr.setHr_role("Rec");
+			hr.setAdded_by(hr.getHr_id());
+			hr.setAdded_power(hr.isAdded_power());
+			hr.setApprover(hr.getApprover());
+			session.save(hr);
+			
+			
+		}
+		catch (Exception e) {
+			session.close();
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Something wrong");
+		}
+		return null;
 	}
 
-	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, boolean approver, boolean add_team) {
+	public ResponseEntity<String> TLAddrecruiter(Integer hrid, String hr_name, int approver, boolean add_team) {
 		Session session = entityManager.unwrap(Session.class);
 		try {
 			hr.setHr_name(hr_name);
@@ -324,9 +372,9 @@ public class Ccrservice {
 
 			int a = 5;
 
-			if (approver == false && add_team == true) {
+			if (add_team == true) {
 				hr.setApprover(b);
-				hr.setHr_role("TeamLead");
+				hr.setHr_role("Rec");
 			} else {
 				hr.setApprover(b);
 				hr.setHr_role("Rec");
@@ -597,53 +645,17 @@ public class Ccrservice {
 		boolean[] answers = { ratingForm.isQ1(), ratingForm.isQ2(), ratingForm.isQ3(), ratingForm.isQ4(),
 				ratingForm.isQ5(), ratingForm.isQ6(), ratingForm.isQ7(), ratingForm.isQ8(), ratingForm.isQ9(),
 				ratingForm.isQ10(), };
-//		String[] categories = { ratingForm.getCategory1(), ratingForm.getCategory2(), ratingForm.getCategory3(),
-//				ratingForm.getCategory4(), ratingForm.getCategory5() };
 
 		int[] weightages = { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
 
 		int totalScore = 0;
-//		int category1Score = 0;
-//		int category2Score = 0;
-//		int category3Score = 0;
-//		int category4Score = 0;
-//		int category5Score = 0;
+
 
 		for (int i = 0; i < answers.length; i++) {
 			if (answers[i]) {
 				totalScore += weightages[i];
 			}
 		}
-
-//		for (int i = 0; i < answers.length; i++) {
-//			if (answers[i]) {
-//				switch (i / 2) {
-//				case 0:
-//					category1Score += weightages[i];
-//					break;
-//				case 1:
-//					category2Score += weightages[i];
-//					break;
-//				case 2:
-//					category3Score += weightages[i];
-//					break;
-//				case 3:
-//					category4Score += weightages[i];
-//					break;
-//				case 4:
-//					category5Score += weightages[i];
-//					break;
-//				}
-//			}
-//		}
-
-//		totalScore = category1Score + category2Score + category3Score + category4Score + category5Score;
-//		ratingForm.setCategory1Score(category1Score);
-//		ratingForm.setCategory2Score(category2Score);
-//		ratingForm.setCategory3Score(category3Score);
-//		ratingForm.setCategory4Score(category4Score);
-//		ratingForm.setCategory5Score(category5Score);
-
 		ratingForm.setRating_total(totalScore);
 
 		ratingRepo.save(ratingForm);
@@ -756,7 +768,6 @@ public class Ccrservice {
 		}
 	}
 
-
 	public OcrResult saveImage(OcrResult file) {
 		return ocrRepo.save(file);
 	}
@@ -770,7 +781,7 @@ public class Ccrservice {
 //			ocrResult.setExtractedCharacters(exctractedCaharcters);
 			System.out.println(exctractedCaharcters);
 			ocrRepo.save(imageData);
-			
+
 		}
 		return ResponseEntity.ok("Chars Saved sucessfully");
 	}
@@ -847,25 +858,25 @@ public class Ccrservice {
 	}
 
 	private String performOcrOnImage(MultipartFile file) throws IOException {
-	    Tesseract tesseract = new Tesseract();
-	
-	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
-	    tesseract.setLanguage("eng");
-	  
-	    try {
-	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
-	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
-	        file.transferTo(imageFile);
-	        
-	        // Perform OCR on the image and extract the text.
-	        return tesseract.doOCR(imageFile);
-	    } catch (TesseractException e) {
-	        e.printStackTrace();
-	        return null;
-	    }
-	
+		Tesseract tesseract = new Tesseract();
 
-		
+		tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
+		tesseract.setLanguage("eng");
+
+		try {
+			// Convert the MultipartFile to a File object, as Tesseract expects a File.
+			File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
+			file.transferTo(imageFile);
+
+			// Perform OCR on the image and extract the text.
+			return tesseract.doOCR(imageFile);
+		} catch (TesseractException e) {
+			e.printStackTrace();
+			return null;
+		}
+
 	}
+
+	
 
 }
