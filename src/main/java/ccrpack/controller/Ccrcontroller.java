@@ -49,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
+import ccrpack.entity.Comment;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.OcrResult;
@@ -290,6 +291,15 @@ public class Ccrcontroller {
 		return ccrservice.commentsapprove(candidate_id, hr_id, comment);
 	}
 
+	///// get all candidates review request list
+	@GetMapping(value = "/getallcandidatescomment")
+	public List<Comment> getallcandidatescomment() {
+
+		return ccrservice.getallcandidatescomment();
+
+	}
+
+	
 	///// get hr request for approval to hradmin
 	@GetMapping("/getcommentrequest")
 	public ResponseEntity<?> getcommentrequest(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
