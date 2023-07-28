@@ -262,7 +262,46 @@ public class Ccrcontroller {
 	public ResponseEntity<?> BackgroundVerify(@RequestParam("image") MultipartFile file) {
 
 		return ccrservice.BackgroundVerify(file);
-
 	}
+
+	@GetMapping("/getFile1")
+	public ResponseEntity<byte[]> getFile1(@RequestParam Integer candidate_id) {
+		return ccrservice.getFile1(candidate_id);
+	}
+
+	////////// Comment Section on rating form
+	@PostMapping("/commentsapprove")
+	public ResponseEntity<?> commentsapprove(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+			@RequestParam String comment) {
+		return ccrservice.commentsapprove(candidate_id, hr_id, comment);
+	}
+
+	///// get hr request for approval to hradmin
+	@GetMapping("/getcommentrequest")
+	public ResponseEntity<?> getcommentrequest(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+			@RequestParam Integer comment_id) {
+		return ccrservice.getcommentrequest(candidate_id, hr_id, comment_id);
+	}
+
+	/////// comment approved by hr admin
+	@PostMapping("/commentaccept")
+	public ResponseEntity<?> commentaccept(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+			@RequestParam Integer comment_id) {
+		return ccrservice.commentaccept(candidate_id, hr_id, comment_id);
+	}
+	///////given suggestion by hr admin to recruiter to change comment
+	@PostMapping("/commentsuggestion")
+	public ResponseEntity<?> commentsuggestion(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+			@RequestParam Integer comment_id,@RequestParam String suggestion) {
+		return ccrservice.commentsuggestion(candidate_id, hr_id, comment_id,suggestion);
+	}
+	///////after giving suggestion the update comment request will go to the recruiter
+	@GetMapping("/newcommenttocand")
+	public ResponseEntity<?> getsuggestion(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+			@RequestParam Integer comment_id) {
+		return ccrservice.getsuggestion(candidate_id, hr_id, comment_id);
+	}
+	
+	
 
 }

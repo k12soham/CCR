@@ -43,6 +43,7 @@ import org.springframework.util.StringUtils;
 import ccrpack.entity.Answer;
 import ccrpack.entity.Candidate;
 import ccrpack.entity.CcrAdmin;
+import ccrpack.entity.Comment;
 import ccrpack.entity.Company;
 import ccrpack.entity.Hr;
 import ccrpack.entity.OcrResult;
@@ -51,6 +52,7 @@ import ccrpack.entity.RatingForm;
 import ccrpack.repo.AnswerRepo;
 import ccrpack.repo.CandidateRepo;
 import ccrpack.repo.CcrRepo;
+import ccrpack.repo.CommentRepo;
 import ccrpack.repo.CompanyRepo;
 import ccrpack.repo.HrRepo;
 import ccrpack.repo.OcrResultRepo;
@@ -65,6 +67,7 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -104,6 +107,9 @@ public class Ccrservice {
 	@Autowired
 	OcrResultRepo ocrRepo;
 
+	@Autowired
+	CommentRepo commentRepo;
+
 	private ITesseract tesseract;
 
 	public Ccrservice() {
@@ -117,6 +123,7 @@ public class Ccrservice {
 	Candidate candidate = new Candidate();
 	CcrAdmin ccrAdmin = new CcrAdmin();
 	OcrResult ocrResult = new OcrResult();
+	Comment comment1 = new Comment();
 
 	@Autowired
 	private JavaMailSender javaMailSender;
@@ -756,7 +763,6 @@ public class Ccrservice {
 		}
 	}
 
-
 	public OcrResult saveImage(OcrResult file) {
 		return ocrRepo.save(file);
 	}
@@ -770,7 +776,7 @@ public class Ccrservice {
 //			ocrResult.setExtractedCharacters(exctractedCaharcters);
 			System.out.println(exctractedCaharcters);
 			ocrRepo.save(imageData);
-			
+
 		}
 		return ResponseEntity.ok("Chars Saved sucessfully");
 	}
@@ -792,20 +798,20 @@ public class Ccrservice {
 		}
 	}
 
+	////////////// yashhhhh
+
 	public ResponseEntity<?> BackgroundVerify(MultipartFile file) {
 		try {
-//	    	Tesseract tesseract = new Tesseract();
-//	    	 byte[] imageBytes = file.getBytes();
-//	    	  String result = tesseract.doOCR(new ByteArrayInputStream(imageBytes));
-			if (file.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
-			}
+
+//			if (file.isEmpty()) {
+//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please select a file to upload.");
+//			}
 
 			// Check if the uploaded file is an image (you can add more image format checks
 			// if needed)
-			if (!file.getContentType().startsWith("image/")) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
-			}
+//			if (!file.getContentType().startsWith("image/")) {
+//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload a valid image file.");
+//			}
 
 			if (!isValidAadharCard(file)) {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -815,11 +821,17 @@ public class Ccrservice {
 			String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
 			String filePath = Paths.get(uploadDir, uniqueFileName).toString();
 
+			/////// This is the codefrom isValidAadharCard method remove once that is
+			/////// working
+			String extractedText = performOcrOnImage(file);
+			System.out.println(extractedText);
+
 			Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
 
 			Candidate imageEntity = new Candidate();
 			imageEntity.setName(uniqueFileName);
 			imageEntity.setFilePath(filePath);
+			imageEntity.setAadharDocument(file.getBytes());
 			candidateRepo.save(imageEntity);
 
 			return ResponseEntity.ok("Image uploaded successfully.");
@@ -839,6 +851,7 @@ public class Ccrservice {
 
 				return true;
 			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -847,25 +860,155 @@ public class Ccrservice {
 	}
 
 	private String performOcrOnImage(MultipartFile file) throws IOException {
-	    Tesseract tesseract = new Tesseract();
-	
-	    tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
-	    tesseract.setLanguage("eng");
-	  
-	    try {
-	        // Convert the MultipartFile to a File object, as Tesseract expects a File.
-	        File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
-	        file.transferTo(imageFile);
-	        
-	        // Perform OCR on the image and extract the text.
-	        return tesseract.doOCR(imageFile);
-	    } catch (TesseractException e) {
-	        e.printStackTrace();
-	        return null;
-	    }
-	
+		Tesseract tesseract = new Tesseract();
 
-		
+		tesseract.setDatapath("C:\\Users\\Yash Porlekar\\Git\\CCRBoot\\src\\main\\resources\\static\\images");
+		tesseract.setLanguage("eng");
+
+		try {
+			// Convert the MultipartFile to a File object, as Tesseract expects a File.
+			File imageFile = File.createTempFile("tempImage", file.getOriginalFilename());
+			file.transferTo(imageFile);
+
+			// Perform OCR on the image and extract the text.
+			return tesseract.doOCR(imageFile);
+		} catch (TesseractException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public ResponseEntity<byte[]> getFile1(Integer candidate_id) {
+
+		candidate = candidateRepo.findById(candidate_id).get();
+		System.out.println(candidate);
+		if (candidate != null) {
+			HttpHeaders headers = new HttpHeaders();
+
+			headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+			headers.setContentDispositionFormData("attachment", candidate.getName());
+
+			return new ResponseEntity<>(candidate.getAadharDocument(), headers, HttpStatus.OK);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	///////// Comments approval candidate
+	public ResponseEntity<?> commentsapprove(Integer candidate_id, Integer hr_id, String comment) {
+		Comment comment1 = new Comment();
+		comment1.setComment(comment);
+		comment1.setComment_approve(false);
+
+		Candidate candidate = new Candidate();
+		candidate.setCandidate_id(candidate_id);
+		comment1.setCandidate(candidate);
+
+		Hr hr = new Hr();
+		hr.setHr_id(hr_id);
+		comment1.setHr(hr);
+
+		commentRepo.save(comment1);
+		return null;
+	}
+
+	public ResponseEntity<?> getcommentrequest(Integer candidate_id, Integer hr_id, Integer comment_id) {
+
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
+		Root<Comment> root = cr.from(Comment.class);
+
+		cr.select(root).where(cb.equal(root.get("comment_id"), comment_id));
+		Query query = session.createQuery(cr);
+		Comment results = null;
+		results = (Comment) query.getSingleResult();
+		String a = results.getComment();
+		session.close();
+		return ResponseEntity.status(HttpStatus.OK).body(a);
+	}
+
+	public ResponseEntity<?> commentaccept(Integer candidate_id, Integer hr_id, Integer comment_id) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
+		Root<Comment> root = cr.from(Comment.class);
+
+		Join<Comment, Candidate> candidateJoin = root.join("candidate");
+		Join<Comment, Hr> hrJoin = root.join("hr");
+
+		cr.select(root).where(cb.and(cb.equal(root.get("comment_id"), comment_id),
+				cb.equal(candidateJoin.get("candidate_id"), candidate_id), cb.equal(hrJoin.get("hr_id"), hr_id)));
+
+		Query query = session.createQuery(cr);
+		Comment result = null;
+		try {
+			result = (Comment) query.getSingleResult();
+			result.setComment_approve(true);
+			commentRepo.save(result);
+
+			return ResponseEntity.status(HttpStatus.OK).body("Comment is approved by HR admin.");
+		} catch (NoResultException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Comment not found.");
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("An error occurred while processing the request.");
+		}
+	}
+
+	public ResponseEntity<?> commentsuggestion(Integer candidate_id, Integer hr_id, Integer comment_id,
+			String suggestion) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
+		Root<Comment> root = cr.from(Comment.class);
+
+		Join<Comment, Candidate> candidateJoin = root.join("candidate");
+		Join<Comment, Hr> hrJoin = root.join("hr");
+
+		cr.select(root).where(cb.and(cb.equal(root.get("comment_id"), comment_id),
+				cb.equal(candidateJoin.get("candidate_id"), candidate_id), cb.equal(hrJoin.get("hr_id"), hr_id)));
+
+		Query query = session.createQuery(cr);
+		Comment result = null;
+		try {
+			result = (Comment) query.getSingleResult();
+			result.setSuggestion(suggestion);
+			commentRepo.save(result);
+
+			return ResponseEntity.status(HttpStatus.OK).body("Suggestion Given Sucessfully");
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("An error occurred while processing the request.");
+		}
+
+	}
+
+	public ResponseEntity<?> getsuggestion(Integer candidate_id, Integer hr_id, Integer comment_id) {
+		Session session = entityManager.unwrap(Session.class);
+		CriteriaBuilder cb = session.getCriteriaBuilder();
+		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
+		Root<Comment> root = cr.from(Comment.class);
+
+		Join<Comment, Candidate> candidateJoin = root.join("candidate");
+		Join<Comment, Hr> hrJoin = root.join("hr");
+
+		cr.select(root).where(cb.and(cb.equal(root.get("comment_id"), comment_id),
+				cb.equal(candidateJoin.get("candidate_id"), candidate_id), cb.equal(hrJoin.get("hr_id"), hr_id)));
+
+		Query query = session.createQuery(cr);
+		Comment result = null;
+		try {
+			result = (Comment) query.getSingleResult();
+			String a = result.getSuggestion();
+			System.out.println(a);
+
+			return ResponseEntity.status(HttpStatus.OK).body(a);
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("An error occurred while processing the request.");
+		}
+
 	}
 
 }

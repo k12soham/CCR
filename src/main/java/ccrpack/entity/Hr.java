@@ -32,6 +32,10 @@ public class Hr {
 	@JsonIgnore
 	private List<RatingForm> ratingform;
 
+	@OneToMany(mappedBy = "hr")
+	@JsonIgnore
+	private List<Comment> comment;
+
 	private Integer added_by;
 
 	private Integer approver;
@@ -44,8 +48,8 @@ public class Hr {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password,
-			String hr_role, Company company, List<RatingForm> ratingform, Integer added_by, Integer approver) {
+	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password, String hr_role,
+			Company company, List<RatingForm> ratingform, List<Comment> comment, Integer added_by, Integer approver) {
 		super();
 		this.hr_id = hr_id;
 		this.hr_name = hr_name;
@@ -55,6 +59,7 @@ public class Hr {
 		this.hr_role = hr_role;
 		this.company = company;
 		this.ratingform = ratingform;
+		this.comment = comment;
 		this.added_by = added_by;
 		this.approver = approver;
 	}
@@ -137,6 +142,14 @@ public class Hr {
 
 	public void setApprover(Integer approver) {
 		this.approver = approver;
+	}
+
+	public List<Comment> getComment() {
+		return comment;
+	}
+
+	public void setComment(List<Comment> comment) {
+		this.comment = comment;
 	}
 
 }
