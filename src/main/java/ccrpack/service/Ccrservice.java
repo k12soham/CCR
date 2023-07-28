@@ -1025,6 +1025,17 @@ public class Ccrservice {
 
 	}
 
+	public List<Comment> getallcandidatescomment() {
+	
+		return commentRepo.findAll();
+		
+	}
+
+
+	
+	
+
+
 	
 
 }

@@ -52,28 +52,25 @@ public class Hr {
 		// TODO Auto-generated constructor stub
 	}
 
-	public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password, String hr_role,
-<<<<<<< HEAD
-			Company company, List<RatingForm> ratingform, List<Comment> comment, Integer added_by, Integer approver) {
-=======
-			Company company, List<RatingForm> ratingform, Integer added_by, Integer approver, boolean added_power,
-			boolean approve_power) {
->>>>>>> 76047f7d82a4d3f31ac325e0b87d868adca136f9
-		super();
-		this.hr_id = hr_id;
-		this.hr_name = hr_name;
-		this.hr_phone = hr_phone;
-		this.hr_email = hr_email;
-		this.hr_password = hr_password;
-		this.hr_role = hr_role;
-		this.company = company;
-		this.ratingform = ratingform;
-		this.comment = comment;
-		this.added_by = added_by;
-		this.approver = approver;
-		this.added_power = added_power;
-		this.approve_power = approve_power;
-	}
+public Hr(Integer hr_id, String hr_name, Long hr_phone, String hr_email, String hr_password, String hr_role,
+		Company company, List<RatingForm> ratingform, List<Comment> comment, Integer added_by, Integer approver,
+		boolean added_power, boolean approve_power) {
+	super();
+	this.hr_id = hr_id;
+	this.hr_name = hr_name;
+	this.hr_phone = hr_phone;
+	this.hr_email = hr_email;
+	this.hr_password = hr_password;
+	this.hr_role = hr_role;
+	this.company = company;
+	this.ratingform = ratingform;
+	this.comment = comment;
+	this.added_by = added_by;
+	this.approver = approver;
+	this.added_power = added_power;
+	this.approve_power = approve_power;
+}
+
 
 	public Integer getHr_id() {
 		return hr_id;
@@ -155,14 +152,16 @@ public class Hr {
 		this.approver = approver;
 	}
 
-<<<<<<< HEAD
+
+
 	public List<Comment> getComment() {
 		return comment;
 	}
 
 	public void setComment(List<Comment> comment) {
 		this.comment = comment;
-=======
+	}
+
 	public boolean isAdded_power() {
 		return added_power;
 	}
@@ -177,7 +176,7 @@ public class Hr {
 
 	public void setApprove_power(boolean approve_power) {
 		this.approve_power = approve_power;
->>>>>>> 76047f7d82a4d3f31ac325e0b87d868adca136f9
+
 	}
 
 }
