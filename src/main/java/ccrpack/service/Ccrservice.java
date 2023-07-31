@@ -925,20 +925,37 @@ public class Ccrservice {
 		return null;
 	}
 
-	public ResponseEntity<?> getcommentrequest(Integer candidate_id, Integer hr_id, Integer comment_id) {
+//	public ResponseEntity<?> getcommentrequest(Integer candidate_id, Integer hr_id, Integer comment_id) {
+//
+//		Session session = entityManager.unwrap(Session.class);
+//		CriteriaBuilder cb = session.getCriteriaBuilder();
+//		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
+//		Root<Comment> root = cr.from(Comment.class);
+//
+//		cr.select(root).where(cb.equal(root.get("comment_id"), comment_id));
+//		Query query = session.createQuery(cr);
+//		Comment results = null;
+//		results = (Comment) query.getSingleResult();
+//		String a = results.getComment();
+//		session.close();
+//		return ResponseEntity.status(HttpStatus.OK).body(a);
+//	}
 
+
+	public ResponseEntity<?> getcommentrequest(Comment comment) {
 		Session session = entityManager.unwrap(Session.class);
 		CriteriaBuilder cb = session.getCriteriaBuilder();
 		CriteriaQuery<Comment> cr = cb.createQuery(Comment.class);
 		Root<Comment> root = cr.from(Comment.class);
 
-		cr.select(root).where(cb.equal(root.get("comment_id"), comment_id));
+		cr.select(root).where(cb.equal(root.get("comment_id"), comment.getComment_id()));
 		Query query = session.createQuery(cr);
 		Comment results = null;
 		results = (Comment) query.getSingleResult();
 		String a = results.getComment();
 		session.close();
 		return ResponseEntity.status(HttpStatus.OK).body(a);
+		
 	}
 
 	public ResponseEntity<?> commentaccept(Integer candidate_id, Integer hr_id, Integer comment_id) {
@@ -1030,6 +1047,9 @@ public class Ccrservice {
 		return commentRepo.findAll();
 		
 	}
+
+	
+
 
 
 	
