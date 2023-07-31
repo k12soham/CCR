@@ -301,11 +301,16 @@ public class Ccrcontroller {
 
 	
 	///// get hr request for approval to hradmin
+//	@GetMapping("/getcommentrequest")
+//	public ResponseEntity<?> getcommentrequest(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
+//			@RequestParam Integer comment_id) {
+//		return ccrservice.getcommentrequest(candidate_id, hr_id, comment_id);
+//	}
 	@GetMapping("/getcommentrequest")
-	public ResponseEntity<?> getcommentrequest(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
-			@RequestParam Integer comment_id) {
-		return ccrservice.getcommentrequest(candidate_id, hr_id, comment_id);
+	public ResponseEntity<?> getcommentrequest(@RequestBody Comment comment) {
+		return ccrservice.getcommentrequest(comment);
 	}
+	
 
 	/////// comment approved by hr admin
 	@PostMapping("/commentaccept")
