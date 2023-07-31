@@ -99,11 +99,7 @@
     <version>1.5.6</version>
 </dependency>
 
-<!-- For Spring Security(role based login) -->
- <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
+
 
 
 
