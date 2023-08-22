@@ -1,44 +1,20 @@
 package ccrpack.controller;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.beans.factory.annotation.Value;
-
-import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import org.springframework.web.bind.annotation.PathVariable;
 
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -133,30 +109,37 @@ public class Ccrcontroller {
 	}
 
 	// Add recruiter from Admin
-	/*@PostMapping(value = "/Adminaddrecruiter")
-	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
-			@RequestParam String hr_email, @RequestParam boolean approver, @RequestParam boolean add_team) {
+	/*
+	 * @PostMapping(value = "/Adminaddrecruiter") public ResponseEntity<String>
+	 * AdminAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	 * 
+	 * @RequestParam String hr_email, @RequestParam boolean approver, @RequestParam
+	 * boolean add_team) {
+	 * 
+	 * return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver,
+	 * add_team);
+	 * 
+	 * }
+	 */
 
-		return ccrservice.AdminAddrecruiter(hrid, hr_name, hr_email, approver, add_team);
-
-	}*/
-	
 	// Add recruiter from Admin
-		@PostMapping(value = "/Adminaddrecruiter")
-		public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid,@RequestBody Hr hr) {
+	@PostMapping(value = "/Adminaddrecruiter")
+	public ResponseEntity<String> AdminAddrecruiter(@RequestParam Integer hrid, @RequestBody Hr hr) {
 
-			return ccrservice.AdminAddrecruiter(hrid,hr);
+		return ccrservice.AdminAddrecruiter(hrid, hr);
 
-		}
+	}
 
 	// Add recruiter from TeamLead
-/*	@PostMapping(value = "/TLaddrecruiter")
-	public ResponseEntity<?> TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
-			@RequestParam int approver, @RequestParam boolean add_team) {
+	/*
+	 * @PostMapping(value = "/TLaddrecruiter") public ResponseEntity<?>
+	 * TLAddrecruiter(@RequestParam Integer hrid, @RequestParam String hr_name,
+	 * 
+	 * @RequestParam int approver, @RequestParam boolean add_team) {
+	 * 
+	 * return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team); }
+	 */
 
-		return ccrservice.TLAddrecruiter(hrid, hr_name, approver, add_team);
-	}*/
-	
 	@PostMapping(value = "/Recruiteraddrecruiter")
 	public ResponseEntity<?> RecruiterAddrecruiter(@RequestBody Hr hr) {
 
@@ -228,13 +211,6 @@ public class Ccrcontroller {
 		return ccrservice.finalcandchangepass(candidate);
 	}
 
-	// Change password (from update account)
-	@PutMapping(value = "/candchangepass")
-	public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
-			@RequestParam String newpass) {
-		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
-	}
-
 	// CCR Admin & Super Admin Login
 	@PostMapping(value = "/ccrlogin")
 	public ResponseEntity<?> ccrlogin(@RequestBody CcrAdmin ccradmin) {
@@ -299,18 +275,15 @@ public class Ccrcontroller {
 
 	}
 
-	
 	///// get hr request for approval to hradmin
-//	@GetMapping("/getcommentrequest")
-//	public ResponseEntity<?> getcommentrequest(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
-//			@RequestParam Integer comment_id) {
-//		return ccrservice.getcommentrequest(candidate_id, hr_id, comment_id);
-//	}
 	@GetMapping("/getcommentrequest")
-	public ResponseEntity<?> getcommentrequest(@RequestBody Comment comment) {
-		return ccrservice.getcommentrequest(comment);
+	public ResponseEntity<?> getcommentrequest(@RequestParam Integer comment_id) {
+		return ccrservice.getcommentrequest(comment_id);
 	}
-	
+//	@GetMapping("/getcommentrequest")
+//	public ResponseEntity<?> getcommentrequest(@RequestBody Comment comment) {
+//		return ccrservice.getcommentrequest(comment);
+//	}
 
 	/////// comment approved by hr admin
 	@PostMapping("/commentaccept")
@@ -318,19 +291,77 @@ public class Ccrcontroller {
 			@RequestParam Integer comment_id) {
 		return ccrservice.commentaccept(candidate_id, hr_id, comment_id);
 	}
-	///////given suggestion by hr admin to recruiter to change comment
+
+	/////// given suggestion by hr admin to recruiter to change comment
 	@PostMapping("/commentsuggestion")
 	public ResponseEntity<?> commentsuggestion(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
-			@RequestParam Integer comment_id,@RequestParam String suggestion) {
-		return ccrservice.commentsuggestion(candidate_id, hr_id, comment_id,suggestion);
+			@RequestParam Integer comment_id, @RequestParam String suggestion) {
+		return ccrservice.commentsuggestion(candidate_id, hr_id, comment_id, suggestion);
 	}
-	///////after giving suggestion the update comment request will go to the recruiter
+
+	/////// after giving suggestion the update comment request will go to the
+	/////// recruiter
 	@GetMapping("/newcommenttocand")
 	public ResponseEntity<?> getsuggestion(@RequestParam Integer candidate_id, @RequestParam Integer hr_id,
 			@RequestParam Integer comment_id) {
 		return ccrservice.getsuggestion(candidate_id, hr_id, comment_id);
 	}
-	
-	
+
+	/// superadmin dash
+	//////// list of ccr admin
+	@GetMapping("/getlistccradmin")
+	public List<CcrAdmin> getlistccradmin() {
+
+		return ccrservice.getlistccradmin();
+
+	}
+
+	////// delete ccr admin by super admin
+	@DeleteMapping("/delccradmin")
+	public ResponseEntity<?> delccradmin(@RequestParam String ccr_email) {
+		return ccrservice.delccradmin(ccr_email);
+	}
+
+	/////////// UPDATE PROFILE CANDIDATE
+	// Change password (from update account)
+	@PutMapping(value = "/candchangepass")
+	public ResponseEntity<String> candchangepass(@RequestParam int candidate_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.candchangepass(candidate_id, currentpass, newpass);
+	}
+
+	@PutMapping(value = "/updatecandprofile")
+	public ResponseEntity<?> updatecandprofile(@RequestParam int candidate_id, @RequestParam String newphone,
+			@RequestParam String newemail) {
+		return ccrservice.updatecandprofile(candidate_id, newphone, newemail);
+	}
+
+	/////////// UPDATE PROFILE Recruiter
+	// Change password (from update account)
+	@PutMapping(value = "/recchangepass")
+	public ResponseEntity<String> recchangepass(@RequestParam int hr_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.recchangepass(hr_id, currentpass, newpass);
+	}
+
+	@PutMapping(value = "/updaterecprofile")
+	public ResponseEntity<?> updaterecprofile(@RequestParam int hr_id, @RequestParam String newphone,
+			@RequestParam String newemail) {
+		return ccrservice.updaterecprofile(hr_id, newphone, newemail);
+	}
+
+/////////// UPDATE PROFILE CCR ADMIN
+// Change password (from update account)
+	@PutMapping(value = "/ccrchangepass")
+	public ResponseEntity<String> ccrchangepass(@RequestParam int ccr_admin_id, @RequestParam String currentpass,
+			@RequestParam String newpass) {
+		return ccrservice.ccrchangepass(ccr_admin_id, currentpass, newpass);
+	}
+
+	@PutMapping(value = "/updateccrprofile")
+	public ResponseEntity<?> updateccrprofile(@RequestParam int ccr_admin_id, @RequestParam Long newphone,
+			@RequestParam String newemail) {
+		return ccrservice.updateccrprofile(ccr_admin_id, newphone, newemail);
+	}
 
 }

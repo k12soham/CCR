@@ -19,6 +19,7 @@ public class Question {
 	private String question;
 	private Integer weightage;
 
+
 	@OneToMany(mappedBy = "question")
 	@JsonIgnore
 	private List<Answer> answer;
