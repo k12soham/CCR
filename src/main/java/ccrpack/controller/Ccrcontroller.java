@@ -49,7 +49,7 @@ import net.sourceforge.tess4j.TesseractException;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 public class Ccrcontroller {
-
+//comment
 	@Autowired
 	Ccrservice ccrservice;
 
