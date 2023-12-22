@@ -28,7 +28,7 @@ public class Candidate {
 	private String candidate_dob;
 	private Integer candidate_otp;
 	private Integer candidate_token;
-
+//comment
 	@Lob
 	@Column(name = "aadhar_document")
 	private byte[] aadharDocument;
