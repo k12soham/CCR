@@ -46,7 +46,7 @@ import jakarta.persistence.PersistenceContext;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 @RestController
 public class Ccrcontroller {
 //comment
@@ -75,6 +75,11 @@ public class Ccrcontroller {
 	@Value("${upload.dir}") // Define the directory where you want to store uploaded images in
 							// application.properties
 	private String uploadDir;
+
+	@PostMapping(value = "/home")
+	public ResponseEntity<String> home() {
+		return null;
+	}
 
 	// Login CCR Admin
 	@PostMapping(value = "/ccradminlogin")
